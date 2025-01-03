@@ -10,7 +10,6 @@ const Header = () => {
         <h1 className={styles.title}>VideoSummary.com</h1>
       </div>
       <nav className={styles.nav}>
-        <a href="/" className={styles.navLink}>Home</a>
         <a href="/about" className={styles.navLink}>About</a>
         <a href="/contact" className={styles.navLink}>Contact</a>
       </nav>

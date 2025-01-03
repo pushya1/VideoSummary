@@ -1,7 +1,8 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import styles from './UploadInterface.module.css';
 import Body from './components/Body';
-
+import FormControlLabel from '@mui/material/FormControlLabel';
+import Switch from '@mui/material/Switch';
 const UploadInterface = () => {
   const [fileName, setFileName] = useState('');
   const [file, setFile] = useState(null);
@@ -10,7 +11,13 @@ const UploadInterface = () => {
   const [summary, setSummary] = useState('');
   const [audioSrc, setAudioSrc] = useState('http://localhost:5000/stream-audio');
   const [isDragging, setIsDragging] = useState(false);
+  const [transcriptionTranslation,setTranscriptionTranslation] = useState("");
+  const [summaryTranslation,setSummaryTranslation] = useState("");
+  const [isChecked, setIsChecked] = useState(false);
+  const [isTranslationFetched,setIsTranslationFetched] = useState(false);
   const audioRef = useRef(null);
+
+
 
   const handleFileChange = (event) => {
     const selectedFile = event.target.files[0];
@@ -26,6 +33,9 @@ const UploadInterface = () => {
     setIsLoading(true);
     setTranscription('');
     setSummary('');
+    setTranscriptionTranslation('');
+    setSummaryTranslation('');
+    setIsTranslationFetched(false);
 
     const formData = new FormData();
     formData.append('audio', file);
@@ -58,6 +68,24 @@ const UploadInterface = () => {
     }
   };
 
+  useEffect(()=> {
+    const handleTranslate = async()=>{
+      try{
+        const response = await fetch('http://localhost:5000/translate');
+        
+        const data = await response.json();
+        console.log(data.transcriptionTranslation)
+        setTranscriptionTranslation(data.transcriptionTranslation);
+        console.log(data.summaryTranslation)
+        setSummaryTranslation(data.summaryTranslation);
+
+      }catch(error){
+        console.log("Error in fetching Translation: ",error.message);
+      }
+    };
+    handleTranslate();
+  },[isTranslationFetched]);
+
   const handleDragOver = (event) => {
     event.preventDefault();
     setIsDragging(true);
@@ -76,6 +104,15 @@ const UploadInterface = () => {
       setFile(droppedFile);
     }
   };
+
+  const handleSwitchChange = (event) => {
+    setIsChecked(event.target.checked); // Update state with the switch value
+    console.log("Switch value:", event.target.checked); // Log the current value
+    if(!isTranslationFetched){
+      setIsTranslationFetched(isTranslationFetched=>!isTranslationFetched);
+    }
+  };
+
 
   return (
     <div className={styles.container}>
@@ -107,7 +144,13 @@ const UploadInterface = () => {
         >
           {isLoading ? 'Uploading...' : 'Upload'}
         </button>
-        {transcription && (
+        
+        <FormControlLabel control={<Switch checked={isChecked} onChange={handleSwitchChange}/>} label="Spanish" className={styles.switch} />
+
+        {isChecked && isTranslationFetched && (
+          <Body transcription={transcriptionTranslation} summary={summaryTranslation}/>
+        )}
+        {!isChecked && transcription && (
           <Body transcription={transcription} summary={summary} audioSrc={audioSrc} audioRef={audioRef} />
         )}
       </main>

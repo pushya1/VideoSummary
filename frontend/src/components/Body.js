@@ -15,10 +15,14 @@ const Body = ({ transcription, summary, audioSrc, audioRef }) => {
           <p>{summary}</p>
         </div>
       )}
-      <audio id="audioPlayer" ref={audioRef} controls className={styles.audioPlayer}>
+
+      {audioSrc && (
+        <audio id="audioPlayer" ref={audioRef} controls className={styles.audioPlayer}>
         <source src={audioSrc} type="audio/mpeg" />
         Your browser does not support the audio element.
       </audio>
+      )}
+      
     </div>
   );
 };

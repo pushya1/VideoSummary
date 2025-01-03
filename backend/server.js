@@ -43,7 +43,8 @@ const storage = multer.diskStorage({
 });
 
 const upload = multer({ storage });
-
+let storedTranscription;
+let storedSummary;
 // Endpoint to handle audio upload and transcription
 app.post("/transcribe", upload.single("audio"), async (req, res) => {
   const filePath = req.file.path;
@@ -71,7 +72,7 @@ app.post("/transcribe", upload.single("audio"), async (req, res) => {
 
     // Transcription result
     const transcription = result.text;
-
+    storedTranscription = result.text;
     // Initialize summarization result as null
     let summarization = null;
 
@@ -87,6 +88,7 @@ app.post("/transcribe", upload.single("audio"), async (req, res) => {
       });
 
       summarization = result.choices[0].message.content;
+      storedSummary = summarization;
       console.log('Summarization :', summarization);
     } catch (summarizationError) {
       console.log('Error summarizing text:', summarizationError.message);
@@ -141,6 +143,39 @@ app.get("/stream-audio",(req,res)=>{
     res.status(500).send("Error streaming the audio file.");
   });
 });
+
+app.get("/translate",async(req,res)=>{
+  let transcriptionTranslation;
+  let summaryTranslation;
+  try {
+    // Now, attempt to summarize the transcribed text using GPT-4
+    const client = new AzureOpenAI({ endpoint, apiKey, apiVersion, deployment });
+    const translationResult = await client.chat.completions.create({
+      messages: [
+        { role: "system", content: "You are a translator. You will translate the given text to spanish." },
+        { role: "user", content: storedTranscription },
+      ],
+      model: deployment,
+    });
+
+    transcriptionTranslation = translationResult.choices[0].message.content;
+    console.log('\n Transcription Translation :', transcriptionTranslation);
+
+    const summaryResult = await client.chat.completions.create({
+      messages: [
+        { role: "system", content: "You are a translator. You will translate the given text to spanish." },
+        { role: "user", content: storedSummary },
+      ],
+      model: deployment,
+    });
+
+    summaryTranslation = summaryResult.choices[0].message.content;
+    console.log('\n Summary Translation :', summaryTranslation);
+  } catch (error) {
+    console.log('Error Translating text:', error.message);
+  }
+  res.status(200).json({transcriptionTranslation,summaryTranslation});
+})
 
 // Start the server
 app.listen(port, () => {

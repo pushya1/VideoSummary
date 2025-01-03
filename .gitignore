@@ -16,7 +16,8 @@ backend/logs/
 *.log
 
 # Temporary files
-backend/downloads/*
+backend/downloads/output.mp3
+backend/uploads/*
 frontend/temp/
 backend/temp/
 *.tmp
