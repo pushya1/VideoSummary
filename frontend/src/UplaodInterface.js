@@ -1,5 +1,6 @@
 import { useState,useRef } from 'react';
 import styles from './UploadInterface.module.css';
+import Body from './components/Body';
 
 const UploadInterface = () => {
   const [fileName, setFileName] = useState('');
@@ -84,22 +85,9 @@ const UploadInterface = () => {
           {isLoading ? 'Uploading...' : 'Upload'}
         </button>
         {transcription && (
-          <div className={styles.transcription}>
-            <strong>Transcription Result:</strong>
-            <p>{transcription}</p>
-          </div>
+          <Body transcription={transcription} summary={summary} audioSrc={audioSrc} audioRef={audioRef}/>
         )}
-        {summary && (
-          <div>
-          <h3>Summary</h3>
-          <p>{summary}</p>
-          </div>
-
-        )}
-        <audio id="audioPlayer" ref={audioRef} controls>
-          <source src={audioSrc} type="audio/mpeg"/>
-          Your browser does not support the audio element.
-        </audio>
+        
       </main>
 
     </div>
