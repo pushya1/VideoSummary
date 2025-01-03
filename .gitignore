@@ -16,8 +16,11 @@ backend/logs/
 *.log
 
 # Temporary files
-backend/downloads/output.mp3
+backend/downloads/*
 backend/uploads/*
+!backend/downloads/.gitkeep
+!backend/uploads/.gitkeep
+
 frontend/temp/
 backend/temp/
 *.tmp
