@@ -1,21 +1,22 @@
-import { useState,useRef } from 'react';
+import { useState, useRef } from 'react';
 import styles from './UploadInterface.module.css';
 import Body from './components/Body';
 
 const UploadInterface = () => {
   const [fileName, setFileName] = useState('');
-  const [file, setFile] = useState(null); // Store the actual file object
-  const [transcription, setTranscription] = useState(''); // Store the transcription result
-  const [isLoading, setIsLoading] = useState(false); // Loading state
-  const [summary,setSummary] = useState('');
-  const [audioSrc, setAudioSrc] = useState('http://localhost:5000/stream-audio'); // Audio source state
+  const [file, setFile] = useState(null);
+  const [transcription, setTranscription] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+  const [summary, setSummary] = useState('');
+  const [audioSrc, setAudioSrc] = useState('http://localhost:5000/stream-audio');
+  const [isDragging, setIsDragging] = useState(false);
   const audioRef = useRef(null);
 
   const handleFileChange = (event) => {
     const selectedFile = event.target.files[0];
     if (selectedFile) {
       setFileName(selectedFile.name);
-      setFile(selectedFile); // Save the file for later use
+      setFile(selectedFile);
     }
   };
 
@@ -23,11 +24,11 @@ const UploadInterface = () => {
     if (!file) return;
 
     setIsLoading(true);
-    setTranscription(''); // Clear previous transcription result
-    setSummary(''); //clear previous summary result
+    setTranscription('');
+    setSummary('');
 
     const formData = new FormData();
-    formData.append('audio', file); // Append the file to the form data
+    formData.append('audio', file);
 
     try {
       const response = await fetch('http://localhost:5000/transcribe', {
@@ -40,13 +41,12 @@ const UploadInterface = () => {
       }
 
       const data = await response.json();
-      setTranscription(data.transcription); // Update with transcription result
-      if(data.summarization){
+      setTranscription(data.transcription);
+      if (data.summarization) {
         setSummary(data.summarization);
       }
       const newSrc = `http://localhost:5000/stream-audio?timestamp=${Date.now()}`;
       setAudioSrc(newSrc);
-      // Ensure the audio element reloads
       if (audioRef.current) {
         audioRef.current.load();
       }
@@ -58,15 +58,38 @@ const UploadInterface = () => {
     }
   };
 
+  const handleDragOver = (event) => {
+    event.preventDefault();
+    setIsDragging(true);
+  };
+
+  const handleDragLeave = () => {
+    setIsDragging(false);
+  };
+
+  const handleDrop = (event) => {
+    event.preventDefault();
+    setIsDragging(false);
+    const droppedFile = event.dataTransfer.files[0];
+    if (droppedFile) {
+      setFileName(droppedFile.name);
+      setFile(droppedFile);
+    }
+  };
+
   return (
     <div className={styles.container}>
-      
-      {/* Main Content */}
       <main className={styles.child}>
         <div className={styles.description}>
-          upload a Video or an Audio file for summary.
+          Upload a Video or an Audio file for summary.
         </div>
-        <label htmlFor="file-upload" className={styles.uploadButton}>
+        <label
+          htmlFor="file-upload"
+          className={`${styles.uploadButton} ${isDragging ? styles.dragging : ''}`}
+          onDragOver={handleDragOver}
+          onDragLeave={handleDragLeave}
+          onDrop={handleDrop}
+        >
           <input
             id="file-upload"
             type="file"
@@ -85,11 +108,9 @@ const UploadInterface = () => {
           {isLoading ? 'Uploading...' : 'Upload'}
         </button>
         {transcription && (
-          <Body transcription={transcription} summary={summary} audioSrc={audioSrc} audioRef={audioRef}/>
+          <Body transcription={transcription} summary={summary} audioSrc={audioSrc} audioRef={audioRef} />
         )}
-        
       </main>
-
     </div>
   );
 };
