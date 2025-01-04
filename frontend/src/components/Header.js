@@ -1,6 +1,10 @@
 import React from 'react';
 import styles from './Header.module.css';
 import logo from '../assets/logo.png';
+import Box from '@mui/material/Box';
+import Button from '@mui/material/Button';
+
+
 
 const Header = () => {
   return (
@@ -10,8 +14,11 @@ const Header = () => {
         <h1 className={styles.title}>VideoSummary.com</h1>
       </div>
       <nav className={styles.nav}>
-        <a href="/about" className={styles.navLink}>About</a>
-        <a href="/contact" className={styles.navLink}>Contact</a>
+        <Box sx={{ '& > :not(style)': { m: 1 } }}>
+        <Button variant="text" href='/about'>About</Button>
+        <Button variant="text" href='/contact'>Contact</Button>
+        
+        </Box>
       </nav>
     </header>
   );

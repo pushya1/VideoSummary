@@ -147,12 +147,14 @@ app.get("/stream-audio",(req,res)=>{
 app.get("/translate",async(req,res)=>{
   let transcriptionTranslation;
   let summaryTranslation;
+  const language = req.query.language;
+  console.log(language);
   try {
     // Now, attempt to summarize the transcribed text using GPT-4
     const client = new AzureOpenAI({ endpoint, apiKey, apiVersion, deployment });
     const translationResult = await client.chat.completions.create({
       messages: [
-        { role: "system", content: "You are a translator. You will translate the given text to spanish." },
+        { role: "system", content: `You are a translator. You will translate the given text to ${language}.` },
         { role: "user", content: storedTranscription },
       ],
       model: deployment,
@@ -163,7 +165,7 @@ app.get("/translate",async(req,res)=>{
 
     const summaryResult = await client.chat.completions.create({
       messages: [
-        { role: "system", content: "You are a translator. You will translate the given text to spanish." },
+        { role: "system", content: `You are a translator. You will translate the given text to ${language}.`},
         { role: "user", content: storedSummary },
       ],
       model: deployment,

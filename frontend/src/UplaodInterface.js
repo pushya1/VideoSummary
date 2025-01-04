@@ -1,8 +1,18 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef } from 'react';
 import styles from './UploadInterface.module.css';
 import Body from './components/Body';
 import FormControlLabel from '@mui/material/FormControlLabel';
 import Switch from '@mui/material/Switch';
+import Button from '@mui/material/Button';
+import CloudUploadIcon from '@mui/icons-material/CloudUpload';
+import Box from '@mui/material/Box';
+import InputLabel from '@mui/material/InputLabel';
+import MenuItem from '@mui/material/MenuItem';
+import FormControl from '@mui/material/FormControl';
+import Select from '@mui/material/Select';
+
+
+
 const UploadInterface = () => {
   const [fileName, setFileName] = useState('');
   const [file, setFile] = useState(null);
@@ -14,8 +24,11 @@ const UploadInterface = () => {
   const [transcriptionTranslation,setTranscriptionTranslation] = useState("");
   const [summaryTranslation,setSummaryTranslation] = useState("");
   const [isChecked, setIsChecked] = useState(false);
-  const [isTranslationFetched,setIsTranslationFetched] = useState(false);
+  const [language,setLanguage] = useState('Spanish');
+  const [translationLanguage,setTranslationLanguage] = useState('Spanish');
+  const [isSwitch,setIsSwitch] = useState(false)
   const audioRef = useRef(null);
+
 
 
 
@@ -35,7 +48,8 @@ const UploadInterface = () => {
     setSummary('');
     setTranscriptionTranslation('');
     setSummaryTranslation('');
-    setIsTranslationFetched(false);
+    setIsChecked(false)
+    setIsSwitch(false);
 
     const formData = new FormData();
     formData.append('audio', file);
@@ -55,6 +69,7 @@ const UploadInterface = () => {
       if (data.summarization) {
         setSummary(data.summarization);
       }
+      setIsSwitch(true);
       const newSrc = `http://localhost:5000/stream-audio?timestamp=${Date.now()}`;
       setAudioSrc(newSrc);
       if (audioRef.current) {
@@ -68,23 +83,26 @@ const UploadInterface = () => {
     }
   };
 
-  useEffect(()=> {
-    const handleTranslate = async()=>{
-      try{
-        const response = await fetch('http://localhost:5000/translate');
-        
-        const data = await response.json();
-        console.log(data.transcriptionTranslation)
-        setTranscriptionTranslation(data.transcriptionTranslation);
-        console.log(data.summaryTranslation)
-        setSummaryTranslation(data.summaryTranslation);
+  
+  const handleTranslate = async()=>{
+    console.log(language)
+    try{
+      const response = await fetch(`http://localhost:5000/translate?language=${language}`,{
+        method: "GET",
+      });
+      
+      const data = await response.json();
+      console.log(data.transcriptionTranslation)
+      setTranscriptionTranslation(data.transcriptionTranslation);
+      console.log(data.summaryTranslation)
+      setSummaryTranslation(data.summaryTranslation);
+      setTranslationLanguage(language);
 
-      }catch(error){
-        console.log("Error in fetching Translation: ",error.message);
-      }
-    };
-    handleTranslate();
-  },[isTranslationFetched]);
+    }catch(error){
+      console.log("Error in fetching Translation: ",error.message);
+    }
+  };
+
 
   const handleDragOver = (event) => {
     event.preventDefault();
@@ -106,13 +124,30 @@ const UploadInterface = () => {
   };
 
   const handleSwitchChange = (event) => {
+    if(!fileName) {return}
     setIsChecked(event.target.checked); // Update state with the switch value
     console.log("Switch value:", event.target.checked); // Log the current value
-    if(!isTranslationFetched){
-      setIsTranslationFetched(isTranslationFetched=>!isTranslationFetched);
+    if(isChecked){
+      return;
     }
+    if(transcriptionTranslation && summaryTranslation){
+      if(translationLanguage === language){
+        return;
+      }
+      setTranscriptionTranslation("");
+      setSummaryTranslation("");
+      setTranslationLanguage("");
+    }
+    handleTranslate();
   };
 
+  const handleSelectChange = (event)=>{
+    setLanguage(event.target.value)
+    setIsChecked(false);
+    console.log(event.target.value);
+
+
+  }
 
   return (
     <div className={styles.container}>
@@ -134,20 +169,47 @@ const UploadInterface = () => {
             className={styles.hiddenInput}
             onChange={handleFileChange}
           />
-          <span>📤 Click to upload</span>
+          <span>Click to Select file </span>
         </label>
         {fileName && <div className={styles.fileName}>File Selected: {fileName}</div>}
-        <button
-          className={styles.actionButton}
+
+        <Button 
+          variant="contained" 
+          endIcon={<CloudUploadIcon />}
           disabled={!file || isLoading}
           onClick={handleFileUpload}
+          className={styles.button}
         >
           {isLoading ? 'Uploading...' : 'Upload'}
-        </button>
-        
-        <FormControlLabel control={<Switch checked={isChecked} onChange={handleSwitchChange}/>} label="Spanish" className={styles.switch} />
+        </Button>
 
-        {isChecked && isTranslationFetched && (
+
+        <Box sx={{ minWidth: 120 }} className={styles.select}>
+          <FormControl fullWidth>
+            <InputLabel id="language-label">Language</InputLabel>
+            <Select
+              labelId="language-label"
+              id="language-label-id"
+              value={language}
+              label="Age"
+              onChange={handleSelectChange}
+            >
+              <MenuItem value={'Spanish'}>Spanish</MenuItem>
+              <MenuItem value={"French"}>French</MenuItem>
+              <MenuItem value={"Mandarin Chinese"}>Mandarin</MenuItem>
+              <MenuItem value={"Hindi"}>Hindi</MenuItem>
+              <MenuItem value={"Telugu"}>Telugu</MenuItem>
+              <MenuItem value={"Tamil"}>Tamil</MenuItem>
+              <MenuItem value={"Kanada"}>Kanada</MenuItem>
+            </Select>
+          </FormControl>
+        </Box>
+        
+        <FormControlLabel control={<Switch checked={isChecked} onChange={handleSwitchChange} disabled={!isSwitch}/>} label="Translate" className={styles.switch} />
+
+        
+
+        {isChecked && transcriptionTranslation && (
           <Body transcription={transcriptionTranslation} summary={summaryTranslation}/>
         )}
         {!isChecked && transcription && (
