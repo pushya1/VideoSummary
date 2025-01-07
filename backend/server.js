@@ -179,6 +179,10 @@ app.get("/translate",async(req,res)=>{
   res.status(200).json({transcriptionTranslation,summaryTranslation});
 })
 
+app.get('/',(req,res)=>{
+  res.status(200).send("Welcome to VideoSummary");
+})
+
 // Start the server
 app.listen(port, () => {
   console.log(`Server running on http://localhost:${port}`);
