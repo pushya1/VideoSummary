@@ -9,18 +9,18 @@ const path = require("path");
 
 dotenv.config();
 
-const endpointWhisper = process.env.ENDPOINT_WHISPER;
-const apiKeyWhisper = process.env.APIKEY_WHISPER;
+const endpointWhisper = process.env.endpointWhisper;
+const apiKeyWhisper = process.env.apiKeyWhisper;
 const apiVersionWisper = "2024-06-01";
 const deploymentWisper = "whisper";
 
-const endpoint = process.env.ENDPOINT_GPT;
-const apiKey = process.env.APIKEY_GPT;
+const endpoint = process.env.endpoint;
+const apiKey = process.env.apiKey;
 const apiVersion = "2024-08-01-preview";
 const deployment = "gpt-35-turbo-16k";
 
-const endpointAudio = process.env.ENDPOINT_TTS;
-const apiKeyAudio = process.env.APIKEY_TTS;
+const endpointAudio = process.env.endpointAudio;
+const apiKeyAudio = process.env.apiKeyAudio
 const speechFilePath = "./downloads/output.mp3";
 const apiVersionAudio = "2024-05-01-preview";
 const deploymentAudio = 'tts-hd'

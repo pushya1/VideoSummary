@@ -10,6 +10,23 @@ import InputLabel from '@mui/material/InputLabel';
 import MenuItem from '@mui/material/MenuItem';
 import FormControl from '@mui/material/FormControl';
 import Select from '@mui/material/Select';
+import CircularProgress from '@mui/material/CircularProgress';
+
+function GradientCircularProgress() {
+  return (
+    <div className={styles.loading}>
+      <svg width={0} height={0}>
+        <defs>
+          <linearGradient id="my_gradient" x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" stopColor="#e01cd5" />
+            <stop offset="100%" stopColor="#1CB5E0" />
+          </linearGradient>
+        </defs>
+      </svg>
+      <CircularProgress sx={{ 'svg circle': { stroke: 'url(#my_gradient)' } }} />
+    </div>
+  );
+}
 
 
 
@@ -87,16 +104,17 @@ const UploadInterface = () => {
   const handleTranslate = async()=>{
     console.log(language)
     try{
+      setIsLoading(true);
       const response = await fetch(`http://localhost:5000/translate?language=${language}`,{
         method: "GET",
       });
-      
       const data = await response.json();
       console.log(data.transcriptionTranslation)
       setTranscriptionTranslation(data.transcriptionTranslation);
       console.log(data.summaryTranslation)
       setSummaryTranslation(data.summaryTranslation);
       setTranslationLanguage(language);
+      setIsLoading(false);
 
     }catch(error){
       console.log("Error in fetching Translation: ",error.message);
@@ -137,6 +155,7 @@ const UploadInterface = () => {
       setTranscriptionTranslation("");
       setSummaryTranslation("");
       setTranslationLanguage("");
+      setIsLoading(true)
     }
     handleTranslate();
   };
@@ -207,7 +226,7 @@ const UploadInterface = () => {
         
         <FormControlLabel control={<Switch checked={isChecked} onChange={handleSwitchChange} disabled={!isSwitch}/>} label="Translate" className={styles.switch} />
 
-        
+        {true && <GradientCircularProgress/>}
 
         {isChecked && transcriptionTranslation && (
           <Body transcription={transcriptionTranslation} summary={summaryTranslation}/>
