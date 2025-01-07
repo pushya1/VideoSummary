@@ -226,7 +226,7 @@ const UploadInterface = () => {
         
         <FormControlLabel control={<Switch checked={isChecked} onChange={handleSwitchChange} disabled={!isSwitch}/>} label="Translate" className={styles.switch} />
 
-        {true && <GradientCircularProgress/>}
+        {isLoading && <GradientCircularProgress/>}
 
         {isChecked && transcriptionTranslation && (
           <Body transcription={transcriptionTranslation} summary={summaryTranslation}/>
