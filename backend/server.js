@@ -29,7 +29,7 @@ const app = express();
 const port = 5000;
 
 app.use(cors());
-
+app.use(express.json());
 // Configure multer for file uploads with correct extensions
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
@@ -144,6 +144,19 @@ app.get("/stream-audio",(req,res)=>{
   });
 });
 
+app.get("/stream-translation-audio",(req,res)=>{
+  const filePath = path.join(__dirname,"downloads","translation_output.mp3");
+  //set the headers
+  res.setHeader("Content-Type","audio/mpeg");
+  res.setHeader("Cache-Control", "no-store"); // Disable caching
+  //stream the file
+  const readStream = fs.createReadStream("./downloads/translation_output.mp3");
+  readStream.pipe(res).on("error",(err)=>{
+    console.error("Error streaming file:",err);
+    res.status(500).send("Error streaming the audio file.");
+  });
+});
+
 app.get("/translate",async(req,res)=>{
   let transcriptionTranslation;
   let summaryTranslation;
@@ -176,7 +189,46 @@ app.get("/translate",async(req,res)=>{
   } catch (error) {
     console.log('Error Translating text:', error.message);
   }
+
+  try{
+    const client = new AzureOpenAI({ 
+      endpoint: endpointAudio, 
+      apiKey:apiKeyAudio, 
+      apiVersion:apiVersionAudio, 
+      deployment:'tts-hd' 
+    });
+    const streamToRead = await client.audio.speech.create({
+      model: deploymentAudio,
+      voice: "alloy",
+      input: summaryTranslation,
+    });
+    console.log("Streaming response to downloads/translation_output.mp3");
+    const buffer = Buffer.from(await streamToRead.arrayBuffer());
+    await fs.promises.writeFile("./downloads/translation_output.mp3", buffer);
+    console.log("Finished streaming");
+    
+  }catch(error){
+    console.log("Error encountered in translated TTS: ",error.message,error);
+  }
   res.status(200).json({transcriptionTranslation,summaryTranslation});
+})
+
+app.post('/chatbot',async(req,res)=>{
+  try {
+    const client = new AzureOpenAI({ endpoint, apiKey, apiVersion, deployment });
+    const chatbotResult = await client.chat.completions.create({
+      messages: [
+        { role: "system", content: `You are a chatbot. You will answer to the questions based on the given content ${storedTranscription}.` },
+        { role: "user", content: req.body.message },
+      ],
+      model: deployment,
+    });
+    chatbotSolution = chatbotResult.choices[0].message.content;
+    console.log('\n Chatbot solution :', chatbotSolution);
+    res.status(200).json({output:chatbotSolution})
+  } catch (error) {
+    console.log('Error chatbot :', error.message);
+  }
 })
 
 app.get('/',(req,res)=>{

@@ -37,6 +37,7 @@ const UploadInterface = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [summary, setSummary] = useState('');
   const [audioSrc, setAudioSrc] = useState('http://localhost:5000/stream-audio');
+  const [audioTSrc,setAudioTSrc] = useState('http://localhost:5000/stream-translation-audio');
   const [isDragging, setIsDragging] = useState(false);
   const [transcriptionTranslation,setTranscriptionTranslation] = useState("");
   const [summaryTranslation,setSummaryTranslation] = useState("");
@@ -45,6 +46,7 @@ const UploadInterface = () => {
   const [translationLanguage,setTranslationLanguage] = useState('Spanish');
   const [isSwitch,setIsSwitch] = useState(false)
   const audioRef = useRef(null);
+  const audioTRef = useRef(null);
 
 
 
@@ -115,6 +117,11 @@ const UploadInterface = () => {
       setSummaryTranslation(data.summaryTranslation);
       setTranslationLanguage(language);
       setIsLoading(false);
+      const newSrc = `http://localhost:5000/stream-translation-audio?timestamp=${Date.now()}`;
+      setAudioTSrc(newSrc);
+      if (audioTRef.current) {
+        audioTRef.current.load();
+      }
 
     }catch(error){
       console.log("Error in fetching Translation: ",error.message);
@@ -219,7 +226,7 @@ const UploadInterface = () => {
               <MenuItem value={"Hindi"}>Hindi</MenuItem>
               <MenuItem value={"Telugu"}>Telugu</MenuItem>
               <MenuItem value={"Tamil"}>Tamil</MenuItem>
-              <MenuItem value={"Kanada"}>Kanada</MenuItem>
+              <MenuItem value={"Kanada"}>Kannada</MenuItem>
             </Select>
           </FormControl>
         </Box>
@@ -229,7 +236,7 @@ const UploadInterface = () => {
         {isLoading && <GradientCircularProgress/>}
 
         {isChecked && transcriptionTranslation && (
-          <Body transcription={transcriptionTranslation} summary={summaryTranslation}/>
+          <Body transcription={transcriptionTranslation} summary={summaryTranslation} audioSrc={audioTSrc} audioRef={audioTRef}/>
         )}
         {!isChecked && transcription && (
           <Body transcription={transcription} summary={summary} audioSrc={audioSrc} audioRef={audioRef} />
