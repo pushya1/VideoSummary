@@ -44,9 +44,9 @@ const UploadInterface = () => {
   const [isChecked, setIsChecked] = useState(false);
   const [language,setLanguage] = useState('Spanish');
   const [translationLanguage,setTranslationLanguage] = useState('Spanish');
-  const [isSwitch,setIsSwitch] = useState(false)
   const audioRef = useRef(null);
   const audioTRef = useRef(null);
+  const [isSwitch,setIsSwitch] = useState(false);
 
 
 

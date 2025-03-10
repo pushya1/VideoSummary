@@ -2,52 +2,29 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 1rem 2rem;
-  background-color: #1e293b; /* Dark navy blue */
-  color: #f8fafc; /* Light text color */
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  width: 100%;
+  max-width: 100vw;
+  padding: 10px 20px; /* Adjusted padding for minimal margin */
+  position: absolute;
+  border-bottom: 1px solid #c7c7c7;
+  top: 0;
+  left: 0;
+  right: 0;
 }
 
-.logoContainer {
-  display: flex;
-  align-items: center;
+.logo{
+  margin-left: 2%;
 }
 
-.logo {
-  width: 100px;
-  height: 100px;
-  margin-right: 1rem;
+/* Ensures logo sticks to the right */
+.profileIcon {
+  width: 40px;
+  height: 40px;
+  background-color: #585555;
+  border: #81b644;
+  border-style: solid;
+  border-radius: 50%;
+  margin-left: auto; /* Adjust margin as needed */
+  margin-right: 2% ;
 }
-
-.title {
-  font-size: 1.5rem;
-  font-weight: 600;
-}
-
-.nav {
-  display: flex;
-  gap: 1.5rem;
-}
-
-.navLink {
-  text-decoration: none;
-  color: #f8fafc;
-  font-weight: 500;
-  transition: color 0.3s ease;
-}
-
-.navLink:hover {
-  color: #38bdf8; /* Light blue hover effect */
-}
-
-@media (max-width: 768px) {
-  .header {
-    flex-direction: column;
-    align-items: flex-start;
-  }
-
-  .nav {
-    margin-top: 0.5rem;
-    flex-wrap: wrap;
-  }
-}
+  

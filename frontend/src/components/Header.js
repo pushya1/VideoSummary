@@ -1,26 +1,17 @@
 import React from 'react';
 import styles from './Header.module.css';
-import logo from '../assets/logo.png';
-import Box from '@mui/material/Box';
-import Button from '@mui/material/Button';
+import Logo from "../assets/logo.svg"; 
+
+
 
 
 
 const Header = () => {
   return (
-    <header className={styles.header}>
-      <div className={styles.logoContainer}>
-        <img src={logo} alt="Logo" className={styles.logo} />
-        <h1 className={styles.title}>VideoSummary.com</h1>
+    <div className={styles.header}>
+        <img src={Logo} alt="Mondly Logo" className={styles.logo} />
+        <div className={styles.profileIcon}></div>
       </div>
-      <nav className={styles.nav}>
-        <Box sx={{ '& > :not(style)': { m: 1 } }}>
-        <Button variant="text" href='/about'>About</Button>
-        <Button variant="text" href='/contact'>Contact</Button>
-        
-        </Box>
-      </nav>
-    </header>
   );
 };
 

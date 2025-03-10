@@ -1,0 +1,84 @@
+.uploadContainer{
+  margin-top: 100px;
+  height: 350px;
+  width: 505px;
+  border-radius: 25px;
+  border: 1px solid #c7c7c7;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.select{
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  border-radius: 20px;
+  padding: 10px;
+  height: 75%;
+  width: 100%;
+}
+
+.upload{
+  border-top: 1px solid #c7c7c7;
+  height: 25%;
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+  
+  /* Hide the actual file input */
+.hiddenInput {
+  display: none;
+}
+  
+/* Upload Box (Image acting as a file input) */
+.uploadBox {
+  width: 100%;
+  max-width: 350px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.uploadBox img {
+  width: 100%;
+  transition: opacity 0.3s ease-in-out;
+}
+
+.uploadBox:hover img {
+  opacity: 0.8; /* Slight transparency effect on hover */
+}
+
+
+/* File Name Display */
+.fileName {
+  margin-top: 10px;
+  font-size: 14px;
+  color: #555;
+}
+  
+
+.button{
+  border: 1px solid #c7c7c7;
+  border-radius: 40px;
+  background-color: #f9f9f9;
+  width: 215px;
+  height: 60px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+}
+
+.active{
+  background-color: #c2c0c0;
+  cursor: pointer;
+}
+.active:hover{
+  box-shadow: 10px 5px 5px rgb(221, 221, 221);
+}

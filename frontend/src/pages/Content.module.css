@@ -1,0 +1,19 @@
+.container {
+  display: flex;
+  gap: 1%; /* Adds spacing between components */
+  margin: 5%;
+  align-items: flex-start; /* Aligns them properly at the top */
+  justify-content: space-between; /* Ensures they take up space evenly */
+  
+}
+
+/* Adjust the widths of individual components */
+.transcriptionSummary {  
+  flex: 1; /* Takes up available space */
+  max-width: 50%; /* Limits width */
+}
+
+.chatComponent {  
+  flex: 1; /* Takes up available space */
+  max-width: 50%; /* Limits width */
+}

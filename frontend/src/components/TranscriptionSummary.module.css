@@ -1,0 +1,91 @@
+.container {
+  padding: 24px;
+  border-radius: 10px;
+  border: 1px solid #C7C7C7;
+  max-height: 85vh;
+}
+  
+.header {
+  display: flex;
+  align-items: start;
+  gap: 16px;
+}
+
+.meetingImage {
+  width: 140px;
+  height: 90px;
+  border-radius: 8px;
+  object-fit: cover;
+}
+
+.thumbnailBorder {
+  padding: 3px;
+  border-radius: 8px;
+  border: 1px solid #c7c7c7;
+}
+
+.title {
+  font-size: 20px;
+  font-weight: 600;
+}
+
+.date {
+  color: gray;
+  font-size: 14px;
+}
+
+.tags {
+  display: flex;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.tag {
+  background: #e0e0e0;
+  padding: 4px 10px;
+  border-radius: 12px;
+  font-size: 12px;
+}
+
+.addTag {
+  background: none;
+  border: 1px solid gray;
+  padding: 4px 10px;
+  border-radius: 12px;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.transcriptionBox, .summaryBox {
+  padding: 16px;
+  border: 1px solid #c7c7c7;
+  border-radius: 12px;
+  margin-top: 16px;
+  position: relative;
+}
+
+.sectionTitle {
+  font-size: 16px;
+  font-weight: 600;
+  margin-bottom: 8px;
+}
+
+.text {
+  font-size: 14px;
+  color: #555;
+  text-align: left;
+}
+
+.expandButton {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: gray;
+}
+
+h3{
+  text-align: left;
+}

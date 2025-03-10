@@ -1,0 +1,50 @@
+.progressContainer {
+    display: flex;
+    align-items: center;
+  }
+  
+  .progressStep {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    font-size: 14px;
+    font-weight: 500;
+  }
+  
+  .progressLine {
+    width: 40px;
+    height: 2px;
+    background-color: #ccc;
+    margin: 15px 10px 0px 10px;
+  }
+  
+  .completedIcon {
+    color: green;
+  }
+  
+  .inactiveIcon {
+    color: gray;
+  }
+  
+  .activeText {
+    color: black;
+  }
+  
+  .inactiveText {
+    color: gray;
+  }
+  
+  .spinner {
+    animation: spin 0.7s ease-in-out 0s infinite;
+    color: black;
+  }
+  
+  @keyframes spin {
+    0% {
+      transform: rotate(0deg);
+    }
+    100% {
+      transform: rotate(360deg);
+    }
+  }
+  
