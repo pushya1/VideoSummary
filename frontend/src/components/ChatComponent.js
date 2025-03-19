@@ -59,7 +59,7 @@ const ChatComponent = () => {
     <div className={styles.chatContainer}>
       {/* Chat Header */}
       <div className={styles.chatHeader}>
-        <img size={20} className={styles.sparkleIcon} src={sparkle} />
+        <img size={20} alt="sparkle" className={styles.sparkleIcon} src={sparkle} />
       </div>
 
       {/* Chat Messages */}

@@ -157,6 +157,55 @@ app.get("/stream-translation-audio",(req,res)=>{
   });
 });
 
+app.post("/stream",async(req,res)=>{
+
+  const {text} = req.body;
+  if(!text) return res.status(400).json({error: "Text is required"});
+
+  const client = new AzureOpenAI({ 
+    endpoint: endpointAudio, 
+    apiKey:apiKeyAudio, 
+    apiVersion:apiVersionAudio, 
+    deployment:'tts-hd' 
+  });
+  try{
+    res.setHeader("Content-Type", "audio/mpeg");
+    res.setHeader("Transfer-Encoding", "chunked");
+
+    const streamToRead = await client.audio.speech.create({
+      model: deploymentAudio,
+      voice: "alloy",
+      input: req.body.text,
+      response_format: "mp3",
+      stream: true,
+    });
+    const stream = streamToRead.body;
+    if(!stream) {
+      throw new Error("No stream returned from OpenAI API");
+    }
+    console.log("Streaming audio");
+
+    stream.pipe(res);
+  }catch(error){
+    console.error("Error generating speech:",error);
+    res.status(500).json({error:"Failed to generate speech"});
+  }
+
+});
+
+app.get("/stream-translation-audio",(req,res)=>{
+  const filePath = path.join(__dirname,"downloads","translation_output.mp3");
+  //set the headers
+  res.setHeader("Content-Type","audio/mpeg");
+  res.setHeader("Cache-Control", "no-store"); // Disable caching
+  //stream the file
+  const readStream = fs.createReadStream("./downloads/translation_output.mp3");
+  readStream.pipe(res).on("error",(err)=>{
+    console.error("Error streaming file:",err);
+    res.status(500).send("Error streaming the audio file.");
+  });
+});
+
 app.get("/translate",async(req,res)=>{
   let transcriptionTranslation;
   let summaryTranslation;

@@ -14,7 +14,7 @@
     
 /* Chat Greeting */
 .chatSection {
-  margin-top: 50px;
+  margin-top: 10%;
   width: 100%;
 }
   
@@ -38,3 +38,7 @@ p {
   color: #666;
 }
   
+.sparkle{
+  height: 40px;
+  width: 40px;
+}
