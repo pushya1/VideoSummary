@@ -2,13 +2,18 @@ import React, { useState,useRef,useEffect } from "react";
 import styles from "./ChatComponent.module.css";
 import sparkle from "../assets/sparkle.svg"; // MUI or Lucide React for sparkle icon
 import SendButton from "../assets/svg/SendButton";
+import BotMessage from "./BotMessage";
+
 
 const ChatComponent = () => {
+
   const [messages,setMessages] = useState([
     { text: "Hello! How can I assist you?", sender: "bot" },
   ]);
   const [input, setInput] = useState("");
   const chatEndRef = useRef(null);
+
+
 
   // Handle user input
   const  handleSend = async() => {
@@ -65,8 +70,8 @@ const ChatComponent = () => {
       {/* Chat Messages */}
       <div className={styles.chatMessages}>
         {messages.map((msg, index) => (
-          <div key={index} className={msg.sender === "user" ? styles.userMessage : styles.botMessage}>
-            {msg.text}
+          <div key={index} className={msg.sender === "user" ? styles.userMessage : ""}>
+            {msg.sender === "bot" ? <BotMessage msg={msg.text}/> : msg.text}
           </div>
         ))}
         <div ref={chatEndRef}></div>

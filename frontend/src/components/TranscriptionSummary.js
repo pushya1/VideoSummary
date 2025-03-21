@@ -5,11 +5,13 @@ import thubnail from '../assets/meeting.jpeg';
 import Voice from '../assets/svg/Voice';
 import Spinner from "../assets/svg/Spinner";
 import Stop from "../assets/svg/Stop";
+import DocumentModal from "./DocumentModal";
 
 const TranscriptionSummary = ({ title, date, tag, transcription, summary, image }) => {
   const [audioSrc,setAudioSrc] = useState(null);
   const [isLoading,setIsLoading] = useState(false);
   const [isPlaying,setIsPlaying] = useState(false);
+  const [isOpen,setIsOpen] = useState(false);
   const audioRef = useRef(null);
 
   async function handlePlay(){
@@ -63,9 +65,14 @@ const TranscriptionSummary = ({ title, date, tag, transcription, summary, image 
       <div className={styles.transcriptionBox}>
         <h3 className={styles.sectionTitle}>Transcription</h3>
         <p className={styles.text}>{transcription}</p>
-        <button className={styles.expandButton}>
+        <button className={styles.expandButton} onClick={()=>setIsOpen(true)}>
           <OpenInFullRoundedIcon size={18} />
         </button>
+        <DocumentModal isOpen={isOpen} onClose={()=>setIsOpen(false)}>
+          <h2>Transcription</h2>
+          <p>{transcription}</p>
+        </DocumentModal>
+
       </div>
 
       {/* Summary Section */}

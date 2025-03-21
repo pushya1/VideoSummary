@@ -21,7 +21,7 @@ const deployment = "gpt-35-turbo-16k";
 
 const endpointAudio = process.env.endpointAudio;
 const apiKeyAudio = process.env.apiKeyAudio
-const speechFilePath = "./downloads/output.mp3";
+// const speechFilePath = "./downloads/output.mp3";
 const apiVersionAudio = "2024-05-01-preview";
 const deploymentAudio = 'tts-hd'
 
@@ -94,26 +94,6 @@ app.post("/transcribe", upload.single("audio"), async (req, res) => {
       console.log('Error summarizing text:', summarizationError.message);
     }
 
-    try{
-      const client = new AzureOpenAI({ 
-        endpoint: endpointAudio, 
-        apiKey:apiKeyAudio, 
-        apiVersion:apiVersionAudio, 
-        deployment:'tts-hd' 
-      });
-      const streamToRead = await client.audio.speech.create({
-        model: deploymentAudio,
-        voice: "alloy",
-        input: summarization,
-      });
-      console.log("Streaming response to downloads/output.mp3");
-      const buffer = Buffer.from(await streamToRead.arrayBuffer());
-      await fs.promises.writeFile(speechFilePath, buffer);
-      console.log("Finished streaming");
-      
-    }catch(error){
-      console.log("Error encountered in TTS: ",error.message,error);
-    }
 
     // Respond with transcription data and summarization (if successful)
     res.json({
@@ -131,31 +111,7 @@ app.post("/transcribe", upload.single("audio"), async (req, res) => {
   }
 });
 
-app.get("/stream-audio",(req,res)=>{
-  const filePath = path.join(__dirname,"downloads","output.mp3");
-  //set the headers
-  res.setHeader("Content-Type","audio/mpeg");
-  res.setHeader("Cache-Control", "no-store"); // Disable caching
-  //stream the file
-  const readStream = fs.createReadStream(filePath);
-  readStream.pipe(res).on("error",(err)=>{
-    console.error("Error streaming file:",err);
-    res.status(500).send("Error streaming the audio file.");
-  });
-});
 
-app.get("/stream-translation-audio",(req,res)=>{
-  const filePath = path.join(__dirname,"downloads","translation_output.mp3");
-  //set the headers
-  res.setHeader("Content-Type","audio/mpeg");
-  res.setHeader("Cache-Control", "no-store"); // Disable caching
-  //stream the file
-  const readStream = fs.createReadStream("./downloads/translation_output.mp3");
-  readStream.pipe(res).on("error",(err)=>{
-    console.error("Error streaming file:",err);
-    res.status(500).send("Error streaming the audio file.");
-  });
-});
 
 app.post("/stream",async(req,res)=>{
 
@@ -183,8 +139,8 @@ app.post("/stream",async(req,res)=>{
     if(!stream) {
       throw new Error("No stream returned from OpenAI API");
     }
-    console.log("Streaming audio");
 
+    console.log("Streaming audio..");
     stream.pipe(res);
   }catch(error){
     console.error("Error generating speech:",error);
@@ -193,74 +149,6 @@ app.post("/stream",async(req,res)=>{
 
 });
 
-app.get("/stream-translation-audio",(req,res)=>{
-  const filePath = path.join(__dirname,"downloads","translation_output.mp3");
-  //set the headers
-  res.setHeader("Content-Type","audio/mpeg");
-  res.setHeader("Cache-Control", "no-store"); // Disable caching
-  //stream the file
-  const readStream = fs.createReadStream("./downloads/translation_output.mp3");
-  readStream.pipe(res).on("error",(err)=>{
-    console.error("Error streaming file:",err);
-    res.status(500).send("Error streaming the audio file.");
-  });
-});
-
-app.get("/translate",async(req,res)=>{
-  let transcriptionTranslation;
-  let summaryTranslation;
-  const language = req.query.language;
-  console.log(language);
-  try {
-    // Now, attempt to summarize the transcribed text using GPT-4
-    const client = new AzureOpenAI({ endpoint, apiKey, apiVersion, deployment });
-    const translationResult = await client.chat.completions.create({
-      messages: [
-        { role: "system", content: `You are a translator. You will translate the given text to ${language}.` },
-        { role: "user", content: storedTranscription },
-      ],
-      model: deployment,
-    });
-
-    transcriptionTranslation = translationResult.choices[0].message.content;
-    console.log('\n Transcription Translation :', transcriptionTranslation);
-
-    const summaryResult = await client.chat.completions.create({
-      messages: [
-        { role: "system", content: `You are a translator. You will translate the given text to ${language}.`},
-        { role: "user", content: storedSummary },
-      ],
-      model: deployment,
-    });
-
-    summaryTranslation = summaryResult.choices[0].message.content;
-    console.log('\n Summary Translation :', summaryTranslation);
-  } catch (error) {
-    console.log('Error Translating text:', error.message);
-  }
-
-  try{
-    const client = new AzureOpenAI({ 
-      endpoint: endpointAudio, 
-      apiKey:apiKeyAudio, 
-      apiVersion:apiVersionAudio, 
-      deployment:'tts-hd' 
-    });
-    const streamToRead = await client.audio.speech.create({
-      model: deploymentAudio,
-      voice: "alloy",
-      input: summaryTranslation,
-    });
-    console.log("Streaming response to downloads/translation_output.mp3");
-    const buffer = Buffer.from(await streamToRead.arrayBuffer());
-    await fs.promises.writeFile("./downloads/translation_output.mp3", buffer);
-    console.log("Finished streaming");
-    
-  }catch(error){
-    console.log("Error encountered in translated TTS: ",error.message,error);
-  }
-  res.status(200).json({transcriptionTranslation,summaryTranslation});
-})
 
 app.post('/chatbot',async(req,res)=>{
   try {

@@ -1,0 +1,25 @@
+.botMessage {
+    position: relative;  /* Needed for absolute positioning of child elements */
+    background: #EFF3FD;
+    align-self: flex-start;
+    padding: 10px 15px;
+    border-radius: 12px 12px 12px 0;
+    max-width: 60%;
+    margin: 8px 0;
+    text-align: left; 
+}
+
+/* ✅ Positioning the button at the right-bottom */
+.expandButton {
+    position: absolute;
+    right: 10px;  /* Moves the button to the right */
+    bottom: 5px;  /* Moves the button to the bottom */
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: black;
+}
+
+.expandButton:hover {
+    transform: scale(1.2);
+}

@@ -56,6 +56,17 @@
   cursor: pointer;
 }
 
+.transcriptionBox{
+  height: 350px;
+  overflow-y: auto;
+}
+
+@supports (scrollbar-color: auto) {
+  .transcriptionBox {
+    scrollbar-color: #c7c7c7 transparent;
+  }
+}
+
 .transcriptionBox, .summaryBox {
   padding: 16px;
   border: 1px solid #c7c7c7;
@@ -83,7 +94,11 @@
   background: none;
   border: none;
   cursor: pointer;
-  color: gray;
+  color: black;
+}
+
+.expandButton:hover {
+  transform: scale(1.2);
 }
 
 h3{
