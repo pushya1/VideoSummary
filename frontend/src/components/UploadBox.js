@@ -7,14 +7,7 @@ import uploadIcon from "../assets/uploadIcon.svg";
 import Progress from "./Progress.js";
 
 export default function UploadBox() {
-  const [transcription, setTranscription] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const [summary, setSummary] = useState('');
-  const [audioSrc, setAudioSrc] = useState('http://localhost:5000/stream-audio');
-  const [transcriptionTranslation,setTranscriptionTranslation] = useState("");
-  const [summaryTranslation,setSummaryTranslation] = useState("");
-  const [isChecked, setIsChecked] = useState(false);
-  const [isSwitch,setIsSwitch] = useState(false)
   const audioRef = useRef(null);
   const navigate = useNavigate();
 
@@ -44,14 +37,7 @@ export default function UploadBox() {
 
   const handleFileUpload = async () => {
     if (!file) return;
-
     setIsLoading(true);
-    setTranscription('');
-    setSummary('');
-    setTranscriptionTranslation('');
-    setSummaryTranslation('');
-    setIsChecked(false)
-    setIsSwitch(false);
 
     const formData = new FormData();
     formData.append('audio', file);
@@ -67,20 +53,12 @@ export default function UploadBox() {
       }
 
       const data = await response.json();
-      setTranscription(data.transcription);
-      if (data.summarization) {
-        setSummary(data.summarization);
-      }
       navigate("/content", { state: { transcription: data.transcription, summary: data.summarization } });
-      setIsSwitch(true);
-      const newSrc = `http://localhost:5000/stream-audio?timestamp=${Date.now()}`;
-      setAudioSrc(newSrc);
-      if (audioRef.current) {
+            if (audioRef.current) {
         audioRef.current.load();
       }
     } catch (error) {
       console.error('Error uploading file:', error);
-      setTranscription('Error occurred while processing the file.');
     } finally {
       setIsLoading(false);
     }

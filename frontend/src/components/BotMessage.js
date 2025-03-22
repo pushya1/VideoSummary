@@ -3,7 +3,9 @@ import Voice from "../assets/svg/Voice";
 import Spinner from "../assets/svg/Spinner";
 import Stop from "../assets/svg/Stop";
 import styles from './BotMessage.module.css';
-export default function BotMessage({msg}){
+import { PulseLoader } from "react-spinners";
+
+export default function BotMessage({msg,isPreparing}){
     const [audioSrc,setAudioSrc] = useState(null);
     const [isLoading,setIsLoading] = useState(false);
     const [isPlaying,setIsPlaying] = useState(false);
@@ -39,15 +41,19 @@ export default function BotMessage({msg}){
         setIsPlaying(false);
     }
 
+    let pulseLoader = (<PulseLoader size={10} />);
+
     const result =  (<>
                       {audioSrc && <audio autoPlay ref={audioRef} src={audioSrc} onEnded={handleAudioEnd} />}
                       <button className={styles.expandButton} onClick={()=>handlePlay(msg)}>
                           {isLoading ? <Spinner/> : isPlaying ? <Stop/> : <Voice/>}
                       </button>
                     </>)
+            
     return(
         <div className={styles.botMessage}>  
-            {msg}
+
+            {isPreparing ? pulseLoader : msg}
             {msg.length>100 && result}
             
         </div>

@@ -1,12 +1,11 @@
 import React from "react";
-import { useLocation, useNavigate } from "react-router-dom";
+import { useLocation } from "react-router-dom";
 import Header from "../components/Header";
 import TranscriptionSummary from '../components/TranscriptionSummary';
 import ChatComponent from '../components/ChatComponent'
 import styles from './Content.module.css'
 const Content = () => {
   const location = useLocation();
-  const navigate = useNavigate();
   const { transcription, summary } = location.state || {};
 
   return (
@@ -29,7 +28,6 @@ const Content = () => {
         </div>
 
         
-        {/* <button onClick={() => navigate("/")}>Go Back</button> */}
     </>
     
   );

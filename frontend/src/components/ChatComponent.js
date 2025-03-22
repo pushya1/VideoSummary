@@ -6,7 +6,7 @@ import BotMessage from "./BotMessage";
 
 
 const ChatComponent = () => {
-
+  const [isLoading,setIsLoading] = useState(false);
   const [messages,setMessages] = useState([
     { text: "Hello! How can I assist you?", sender: "bot" },
   ]);
@@ -21,7 +21,7 @@ const ChatComponent = () => {
     const userMessage = { text: input, sender: "user" };
     setMessages((prevMessages) => [...prevMessages, userMessage]);
     setInput("");
-    
+    setIsLoading(true)
     try{
         const response = await fetch('http://localhost:5000/chatbot',{
             method: "POST",
@@ -42,6 +42,8 @@ const ChatComponent = () => {
             setMessages((prevMessages) => [...prevMessages, botReply]);
         }, 1000);
 
+    }finally{
+      setIsLoading(false);
     }
 
     
@@ -74,6 +76,7 @@ const ChatComponent = () => {
             {msg.sender === "bot" ? <BotMessage msg={msg.text}/> : msg.text}
           </div>
         ))}
+        {isLoading && <BotMessage msg={"..."} isPreparing={isLoading}/>}
         <div ref={chatEndRef}></div>
       </div>
 
