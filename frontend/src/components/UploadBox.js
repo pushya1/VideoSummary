@@ -43,7 +43,7 @@ export default function UploadBox() {
     formData.append('audio', file);
 
     try {
-      const response = await fetch('http://localhost:5000/transcribe', {
+      const response = await fetch(`${process.env.REACT_APP_UPLOAD_URL}`, {
         method: 'POST',
         body: formData,
       });

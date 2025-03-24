@@ -23,7 +23,7 @@ const ChatComponent = () => {
     setInput("");
     setIsLoading(true)
     try{
-        const response = await fetch('http://localhost:5000/chatbot',{
+        const response = await fetch(`${process.env.REACT_APP_CHAT_URL}`,{
             method: "POST",
             headers: {
                 "Content-Type": "application/json",

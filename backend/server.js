@@ -6,6 +6,7 @@ const dotenv = require("dotenv");
 const FormData = require("form-data");
 const cors = require("cors");
 const path = require("path");
+const { S3Client, PutObjectCommand } = require("@aws-sdk/client-s3");
 
 dotenv.config();
 
@@ -21,15 +22,40 @@ const deployment = "gpt-35-turbo-16k";
 
 const endpointAudio = process.env.endpointAudio;
 const apiKeyAudio = process.env.apiKeyAudio
-// const speechFilePath = "./downloads/output.mp3";
 const apiVersionAudio = "2024-05-01-preview";
 const deploymentAudio = 'tts-hd'
+
+
+const transcribeClient = new AzureOpenAI({
+  endpoint: endpointWhisper,
+  apiKey: apiKeyWhisper,
+  apiVersion: apiVersionWisper,
+  deployment: deploymentWisper
+  });
+
+const streamClient = new AzureOpenAI({ 
+  endpoint: endpointAudio, 
+  apiKey:apiKeyAudio, 
+  apiVersion:apiVersionAudio, 
+  deployment:'tts-hd' 
+  });
+  
+const chatclient = new AzureOpenAI({ endpoint, apiKey, apiVersion, deployment });
+  
+const s3 = new S3Client({ 
+  region: "us-east-1",
+  credentials: {
+    accessKeyId: process.env.AWS_ACCESS_KEY_ID, 
+    secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY
+  }
+});
 
 const app = express();
 const port = 5000;
 
 app.use(cors());
 app.use(express.json());
+
 // Configure multer for file uploads with correct extensions
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
@@ -44,7 +70,7 @@ const storage = multer.diskStorage({
 
 const upload = multer({ storage });
 let storedTranscription;
-let storedSummary;
+
 // Endpoint to handle audio upload and transcription
 app.post("/transcribe", upload.single("audio"), async (req, res) => {
   const filePath = req.file.path;
@@ -56,15 +82,9 @@ app.post("/transcribe", upload.single("audio"), async (req, res) => {
     // Create a FormData instance and append the audio file
     let data = new FormData();
     data.append("file", fs.createReadStream(filePath));
-    console.log(endpointWhisper)
 
-    const client = new AzureOpenAI({
-      endpoint: endpointWhisper,
-      apiKey: apiKeyWhisper,
-      apiVersion: apiVersionWisper,
-      deployment: deploymentWisper
-    })
-    const result = await client.audio.transcriptions.create({
+    
+    const result = await transcribeClient.audio.transcriptions.create({
       model:deploymentWisper,
       file: fs.createReadStream(filePath),
     })
@@ -78,8 +98,8 @@ app.post("/transcribe", upload.single("audio"), async (req, res) => {
 
     try {
       // Now, attempt to summarize the transcribed text using GPT-4
-      const client = new AzureOpenAI({ endpoint, apiKey, apiVersion, deployment });
-      const result = await client.chat.completions.create({
+      const chatClient = new AzureOpenAI({ endpoint, apiKey, apiVersion, deployment });
+      const result = await chatClient.chat.completions.create({
         messages: [
           { role: "system", content: "You are a summarizer. You will summarize the given text in a concise way" },
           { role: "user", content: transcription },
@@ -88,7 +108,6 @@ app.post("/transcribe", upload.single("audio"), async (req, res) => {
       });
 
       summarization = result.choices[0].message.content;
-      storedSummary = summarization;
       console.log('Summarization :', summarization);
     } catch (summarizationError) {
       console.log('Error summarizing text:', summarizationError.message);
@@ -100,14 +119,36 @@ app.post("/transcribe", upload.single("audio"), async (req, res) => {
       transcription: transcription,
       summarization: summarization,
     });
+    
+     // **Asynchronous Upload to S3**
+    (async () => {
+      try {
+        const fileStream = fs.createReadStream(filePath);
+        const uploadParams = {
+          Bucket: "audioandvideofilesbucket",
+          Key: `${req.file.originalname}`,
+          Body: fileStream,
+          ContentType: req.file.mimetype,
+        };
+
+        await s3.send(new PutObjectCommand(uploadParams));
+        console.log("File uploaded to S3 successfully:", req.file.originalname);
+
+        // **Delete local file after uploading**
+        fs.unlinkSync(filePath);
+      } catch (uploadError) {
+        console.error("Error uploading file to S3:", uploadError.message);
+        if(filePath){
+          fs.unlinkSync(filePath)
+        }
+      }
+    })();
 
   } catch (error) {
     console.error("Error transcribing audio:", error.response?.data || error.message);
     res.status(500).json({
       error: error.response?.data || "Error processing the audio file",
     });
-  } finally {
-    fs.unlinkSync(filePath); // Ensure the file is always deleted after processing
   }
 });
 
@@ -118,17 +159,11 @@ app.post("/stream",async(req,res)=>{
   const {text} = req.body;
   if(!text) return res.status(400).json({error: "Text is required"});
 
-  const client = new AzureOpenAI({ 
-    endpoint: endpointAudio, 
-    apiKey:apiKeyAudio, 
-    apiVersion:apiVersionAudio, 
-    deployment:'tts-hd' 
-  });
   try{
     res.setHeader("Content-Type", "audio/mpeg");
     res.setHeader("Transfer-Encoding", "chunked");
 
-    const streamToRead = await client.audio.speech.create({
+    const streamToRead = await streamClient.audio.speech.create({
       model: deploymentAudio,
       voice: "alloy",
       input: req.body.text,
@@ -151,9 +186,11 @@ app.post("/stream",async(req,res)=>{
 
 
 app.post('/chatbot',async(req,res)=>{
+  if (!req.body.message) {
+    return res.status(400).json({ error: "Message is required" });
+  }
   try {
-    const client = new AzureOpenAI({ endpoint, apiKey, apiVersion, deployment });
-    const chatbotResult = await client.chat.completions.create({
+    const chatbotResult = await chatclient.chat.completions.create({
       messages: [
         { role: "system", content: `You are a chatbot. You will answer to the questions based on the given content ${storedTranscription}.` },
         { role: "user", content: req.body.message },
@@ -172,7 +209,6 @@ app.get('/',(req,res)=>{
   res.status(200).send("Welcome to VideoSummary");
 })
 
-// Start the server
 app.listen(port, () => {
   console.log(`Server running on http://localhost:${port}`);
 });

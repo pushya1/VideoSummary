@@ -24,7 +24,7 @@ const TranscriptionSummary = ({ title, date, tag, transcription, summary, image 
     }
     try{
       setIsLoading(true);
-      const response = await fetch("http://localhost:5000/stream",{
+      const response = await fetch(`${process.env.REACT_APP_VOICE_URL}`,{
         method: "POST",
         headers: {"Content-Type":"application/json"},
         body: JSON.stringify({text:summary}),
