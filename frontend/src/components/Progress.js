@@ -9,7 +9,6 @@ const Progress = () => {
   useEffect(()=>{
     const timeoutId = setTimeout(()=>{
         setIsUploaded(true);
-        console.log("Uploaded");
       },10000);
 
       return ()=>clearTimeout(timeoutId);

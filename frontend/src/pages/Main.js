@@ -19,7 +19,7 @@ const Main = () => {
       <div className={styles.chatSection}>
         <img src={Sparkle} alt="Sparkle" className={styles.sparkle} />
         <h2>
-          Hello <span className={styles.name}>Pushya</span>,
+          Hello <span className={styles.name}>there</span>,
         </h2>
         <p>What can I help you with?</p>
       </div>

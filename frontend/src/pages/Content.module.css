@@ -1,19 +1,56 @@
 .container {
   display: flex;
-  gap: 1%; /* Adds spacing between components */
+  flex-wrap: wrap; /* Allows wrapping for smaller screens */
+  gap: 2%;
   margin: 5%;
-  align-items: flex-start; /* Aligns them properly at the top */
-  justify-content: space-between; /* Ensures they take up space evenly */
-  
+  align-items: flex-start;
+  justify-content: space-between;
+  padding-top: 80px;
+  overflow-y: auto;
 }
 
-/* Adjust the widths of individual components */
+/* Ensure the container does not exceed its parent */
 .transcriptionSummary {  
-  flex: 1; /* Takes up available space */
-  max-width: 50%; /* Limits width */
+  flex: 1;
+  max-width: 50%;
+  width: 100%; /* Ensures it does not exceed */
+  overflow: hidden; /* Prevents content from overflowing */
 }
 
+/* Ensure the child component respects the parent width */
+.transcriptionSummary > * {
+  max-width: 100%;
+}
+
+/* Ensure chat component also behaves correctly */
 .chatComponent {  
-  flex: 1; /* Takes up available space */
-  max-width: 50%; /* Limits width */
+  flex: 1;
+  max-width: 50%;
+  width: 100%;
+}
+
+/* 📱 Responsive Design for Tablets */
+@media (max-width: 1024px) { 
+  .container {
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .transcriptionSummary, .chatComponent {  
+    max-width: 90%;
+    width: 100%;
+  }
+}
+
+/* 📱 Responsive Design for Mobiles */
+@media (max-width: 768px) {
+  .container {
+    margin: 10px;
+    gap: 20px;
+  }
+
+  .transcriptionSummary, .chatComponent {
+    width: 100%;
+    max-width: 100%;
+  }
 }

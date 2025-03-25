@@ -88,8 +88,6 @@ app.post("/transcribe", upload.single("audio"), async (req, res) => {
       model:deploymentWisper,
       file: fs.createReadStream(filePath),
     })
-    console.log("transcription:",result.text);
-
     // Transcription result
     const transcription = result.text;
     storedTranscription = result.text;
@@ -108,7 +106,6 @@ app.post("/transcribe", upload.single("audio"), async (req, res) => {
       });
 
       summarization = result.choices[0].message.content;
-      console.log('Summarization :', summarization);
     } catch (summarizationError) {
       console.log('Error summarizing text:', summarizationError.message);
     }
@@ -132,8 +129,6 @@ app.post("/transcribe", upload.single("audio"), async (req, res) => {
         };
 
         await s3.send(new PutObjectCommand(uploadParams));
-        console.log("File uploaded to S3 successfully:", req.file.originalname);
-
         // **Delete local file after uploading**
         fs.unlinkSync(filePath);
       } catch (uploadError) {
@@ -174,8 +169,6 @@ app.post("/stream",async(req,res)=>{
     if(!stream) {
       throw new Error("No stream returned from OpenAI API");
     }
-
-    console.log("Streaming audio..");
     stream.pipe(res);
   }catch(error){
     console.error("Error generating speech:",error);
@@ -198,7 +191,6 @@ app.post('/chatbot',async(req,res)=>{
       model: deployment,
     });
     chatbotSolution = chatbotResult.choices[0].message.content;
-    console.log('\n Chatbot solution :', chatbotSolution);
     res.status(200).json({output:chatbotSolution})
   } catch (error) {
     console.log('Error chatbot :', error.message);

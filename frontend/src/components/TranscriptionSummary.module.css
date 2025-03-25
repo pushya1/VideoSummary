@@ -67,12 +67,22 @@
   }
 }
 
-.transcriptionBox, .summaryBox {
+.transcriptionBox {
   padding: 16px;
   border: 1px solid #c7c7c7;
   border-radius: 12px;
   margin-top: 16px;
   position: relative;
+}
+
+.summaryBox {
+  padding: 16px;
+  border: 1px solid #c7c7c7;
+  border-radius: 12px;
+  margin-top: 16px;
+  position: relative;
+  max-height: 120px; /* Limit the height */
+  overflow-y: auto; /* Enables scrolling if content exceeds height */
 }
 
 .sectionTitle {
@@ -103,4 +113,19 @@
 
 h3{
   text-align: left;
+}
+
+
+/* Custom Scrollbar for better visibility */
+@supports (scrollbar-color: auto) {
+  .summaryBox {
+    scrollbar-color: #c7c7c7 transparent;
+  }
+}
+
+/* 📱 Responsive Adjustments */
+@media (max-width: 375px) {
+  .summaryBox {
+    max-height: 80px; /* Adjust height for smaller screens */
+  }
 }

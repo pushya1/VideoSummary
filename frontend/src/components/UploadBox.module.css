@@ -1,16 +1,20 @@
-.uploadContainer{
-  margin-top: 100px;
-  height: 350px;
-  width: 505px;
+.uploadContainer {
+  margin-top: clamp(50px, 8vh, 100px);
+  height: auto;
+  width: 90%;
+  max-width: 500px;
   border-radius: 25px;
   border: 1px solid #c7c7c7;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
+  overflow: hidden; /* ✅ Fixes border-top issue */
 }
 
-.select{
+
+/* Drop Area */
+.select {
   display: flex;
   justify-content: center;
   align-items: center;
@@ -18,24 +22,26 @@
   padding: 10px;
   height: 75%;
   width: 100%;
+  max-height: 260px;
 }
 
-.upload{
+/* Upload Section */
+.upload {
   border-top: 1px solid #c7c7c7;
-  height: 25%;
+  height: auto;
   width: 100%;
   display: flex;
   justify-content: center;
   align-items: center;
+  padding: 15px;
 }
 
-  
-  /* Hide the actual file input */
+/* Hide the actual file input */
 .hiddenInput {
   display: none;
 }
-  
-/* Upload Box (Image acting as a file input) */
+
+/* Upload Box */
 .uploadBox {
   width: 100%;
   max-width: 350px;
@@ -54,16 +60,17 @@
   opacity: 0.8; /* Slight transparency effect on hover */
 }
 
-
 /* File Name Display */
 .fileName {
   margin-top: 10px;
   font-size: 14px;
   color: #555;
+  text-align: center;
+  word-wrap: break-word;
 }
-  
 
-.button{
+/* Upload Button */
+.button {
   border: 1px solid #c7c7c7;
   border-radius: 40px;
   background-color: #f9f9f9;
@@ -73,12 +80,52 @@
   align-items: center;
   justify-content: center;
   gap: 7px;
+  transition: all 0.3s ease;
+  font-size: 16px;
 }
 
-.active{
+/* Active Button */
+.active {
   background-color: #c2c0c0;
   cursor: pointer;
 }
-.active:hover{
-  box-shadow: 10px 5px 5px rgb(221, 221, 221);
+
+.active:hover {
+  box-shadow: 5px 3px 10px rgba(221, 221, 221, 0.5);
+}
+
+/* 📱 Mobile & Tablet Responsiveness */
+@media (max-width: 768px) {
+  .uploadContainer {
+    width: 95%;
+    max-width: 450px;
+  }
+
+  .uploadBox {
+    max-width: 300px;
+  }
+
+  .button {
+    width: 180px;
+    height: 50px;
+    font-size: 14px;
+  }
+}
+
+@media (max-width: 480px) {
+  .uploadContainer {
+    width: 100%;
+    max-width: 400px;
+    padding: 10px;
+  }
+
+  .uploadBox {
+    max-width: 280px;
+  }
+
+  .button {
+    width: 160px;
+    height: 45px;
+    font-size: 13px;
+  }
 }

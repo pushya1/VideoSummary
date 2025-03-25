@@ -11,7 +11,6 @@ export default function BotMessage({msg,isPreparing}){
     const [isPlaying,setIsPlaying] = useState(false);
     const audioRef = useRef(null);
     async function handlePlay(msg){
-        console.log("ok",msg)
         if (isPlaying && audioRef.current) {
           // **Stop audio if already playing**
           audioRef.current.pause();

@@ -32,7 +32,6 @@ const ChatComponent = () => {
         });
         const data = await response.json();
         const botReply = { text: data.output, sender: "bot" };
-        console.log(botReply);
         setMessages((prevMessages)=>[...prevMessages,botReply]);
 
     }catch(e){
