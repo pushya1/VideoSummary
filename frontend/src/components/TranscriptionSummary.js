@@ -16,9 +16,8 @@ const TranscriptionSummary = ({ title, date, tag, transcription, summary, image 
 
   async function handlePlay(){
     if (isPlaying && audioRef.current) {
-      // **Stop audio if already playing**
       audioRef.current.pause();
-      audioRef.current.currentTime = 0; // Reset to start
+      audioRef.current.currentTime = 0; 
       setIsPlaying(false);
       return;
     }
@@ -46,7 +45,6 @@ const TranscriptionSummary = ({ title, date, tag, transcription, summary, image 
   }
   return (
     <div className={styles.container}>
-      {/* Meeting Header */}
       <div className={styles.header}>
         <div className={styles.thumbnailBorder}>
             {image && <img src={thubnail} alt="Meeting" className={styles.meetingImage} />}
