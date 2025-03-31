@@ -11,7 +11,7 @@ export default function UploadBox() {
   const audioRef = useRef(null);
   const navigate = useNavigate();
 
-
+  const [errorMessage,setErrorMessage] = useState("");
   const [file, setFile] = useState(null);
 
   // Handle file selection from input
@@ -46,7 +46,12 @@ export default function UploadBox() {
       const response = await fetch(`${process.env.REACT_APP_UPLOAD_URL}`, {
         method: 'POST',
         body: formData,
+        credentials: 'include'
       });
+
+      if(response.status===401){
+        setErrorMessage("Please Sign in to Upload")
+      }
 
       if (!response.ok) {
         throw new Error('Failed to upload file');
@@ -54,7 +59,7 @@ export default function UploadBox() {
 
       const data = await response.json();
       navigate("/content", { state: { transcription: data.transcription, summary: data.summarization } });
-            if (audioRef.current) {
+      if (audioRef.current) {
         audioRef.current.load();
       }
     } catch (error) {
@@ -95,6 +100,7 @@ export default function UploadBox() {
       </div>
 
       {file && <p className={styles.fileName}>Selected: {file.name}</p>}
+      {errorMessage && <p className={styles.errorMessage}>{errorMessage}</p>}
     </>
   );
 }

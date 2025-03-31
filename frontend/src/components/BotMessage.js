@@ -24,6 +24,7 @@ export default function BotMessage({msg,isPreparing}){
             method: "POST",
             headers: {"Content-Type":"application/json"},
             body: JSON.stringify({text:msg}),
+            credentials: 'include'
           })
           if(!response.ok) throw new Error("Failed to fetch audio");
           const audioUrl = URL.createObjectURL(await response.blob());

@@ -7,6 +7,9 @@ const FormData = require("form-data");
 const cors = require("cors");
 const path = require("path");
 const { S3Client, PutObjectCommand } = require("@aws-sdk/client-s3");
+const passport = require("passport");
+const session = require("express-session");
+const GoogleStrategy = require("passport-google-oauth20").Strategy;
 
 dotenv.config();
 
@@ -21,24 +24,23 @@ const apiVersion = "2024-08-01-preview";
 const deployment = "gpt-35-turbo-16k";
 
 const endpointAudio = process.env.endpointAudio;
-const apiKeyAudio = process.env.apiKeyAudio
+const apiKeyAudio = process.env.apiKeyAudio;
 const apiVersionAudio = "2024-05-01-preview";
-const deploymentAudio = 'tts-hd'
-
+const deploymentAudio = 'tts-hd';
 
 const transcribeClient = new AzureOpenAI({
   endpoint: endpointWhisper,
   apiKey: apiKeyWhisper,
   apiVersion: apiVersionWisper,
   deployment: deploymentWisper
-  });
+});
 
 const streamClient = new AzureOpenAI({ 
   endpoint: endpointAudio, 
-  apiKey:apiKeyAudio, 
-  apiVersion:apiVersionAudio, 
-  deployment:'tts-hd' 
-  });
+  apiKey: apiKeyAudio, 
+  apiVersion: apiVersionAudio, 
+  deployment: 'tts-hd' 
+});
   
 const chatclient = new AzureOpenAI({ endpoint, apiKey, apiVersion, deployment });
   
@@ -53,153 +55,175 @@ const s3 = new S3Client({
 const app = express();
 const port = 5000;
 
-app.use(cors());
-app.use(express.json());
+app.use(
+  cors({
+    origin: "http://localhost:3000", // Replace with your frontend URL
+    credentials: true, // Allow credentials (cookies, authorization headers)
+  })
+);
 
-// Configure multer for file uploads with correct extensions
+app.use(express.json());
+app.use(session({
+  secret: process.env.SESSION_SECRET,
+  resave: false,
+  saveUninitialized: true,
+}));
+
+app.use(passport.initialize());
+app.use(passport.session());
+
+passport.use(new GoogleStrategy({
+  clientID: process.env.GOOGLE_CLIENT_ID,
+  clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+  callbackURL: "/auth/google/callback"
+}, (accessToken, refreshToken, profile, done) => {
+  return done(null, profile);
+}));
+
+passport.serializeUser((user, done) => {
+  done(null, user);
+});
+
+passport.deserializeUser((user, done) => {
+  done(null, user);
+});
+
+const isAuthenticated = (req, res, next) => {
+  if (req.isAuthenticated()) {
+    return next();
+  }
+  res.status(401).json({ message: "Unauthorized" });
+};
+
+app.get("/auth/google", passport.authenticate("google", { scope: ["profile", "email"] }));
+
+app.get("/auth/google/callback", 
+  passport.authenticate("google", { failureRedirect: "/" }),
+  (req, res) => {
+    res.redirect("http://localhost:3000/");
+  }
+);
+
+app.get("/logout", (req, res) => {
+  req.logout((err) => {
+    if (err) return next(err);
+    res.redirect("/");
+  });
+});
+
+app.get("/user", isAuthenticated, (req, res) => {
+  res.json(req.user);
+});
+
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
-    cb(null, "uploads/"); // Save files to the 'uploads/' directory
+    cb(null, "uploads/");
   },
   filename: (req, file, cb) => {
-    const originalExtension = path.extname(file.originalname); // Extract the original file extension
-    const fileName = `${file.fieldname}-${Date.now()}${originalExtension}`; // Add timestamp to make the file name unique
+    const originalExtension = path.extname(file.originalname);
+    const fileName = `${file.fieldname}-${Date.now()}${originalExtension}`;
     cb(null, fileName);
   },
 });
 
 const upload = multer({ storage });
-let storedTranscription;
 
-// Endpoint to handle audio upload and transcription
-app.post("/transcribe", upload.single("audio"), async (req, res) => {
+let transcription;
+
+app.post("/transcribe", isAuthenticated, upload.single("audio"), async (req, res) => {
   const filePath = req.file.path;
   if (!fs.existsSync(filePath)) {
     return res.status(400).send("File not found on server.");
   }
-  
+
   try {
-    // Create a FormData instance and append the audio file
-    let data = new FormData();
-    data.append("file", fs.createReadStream(filePath));
-
-    
-    const result = await transcribeClient.audio.transcriptions.create({
-      model:deploymentWisper,
+    // Transcribe audio
+    const transcriptionResult = await transcribeClient.audio.transcriptions.create({
+      model: deploymentWisper,
       file: fs.createReadStream(filePath),
-    })
-    // Transcription result
-    const transcription = result.text;
-    storedTranscription = result.text;
-    // Initialize summarization result as null
-    let summarization = null;
+    });
 
+    let summaryText = "Summarization failed.";
     try {
-      // Now, attempt to summarize the transcribed text using GPT-4
       const chatClient = new AzureOpenAI({ endpoint, apiKey, apiVersion, deployment });
-      const result = await chatClient.chat.completions.create({
+      const summaryResult = await chatClient.chat.completions.create({
         messages: [
-          { role: "system", content: "You are a summarizer. You will summarize the given text in a concise way" },
-          { role: "user", content: transcription },
+          { role: "system", content: "You are a summarizer. Summarize the given text concisely." },
+          { role: "user", content: transcriptionResult.text },
         ],
         model: deployment,
       });
 
-      summarization = result.choices[0].message.content;
+      summaryText = summaryResult.choices[0].message.content;
     } catch (summarizationError) {
-      console.log('Error summarizing text:', summarizationError.message);
+      console.error("Error summarizing text:", summarizationError.message);
     }
+    transcription = transcriptionResult.text;
+    // Send response before S3 upload
+    res.json({ transcription: transcription, summarization: summaryText });
 
-
-    // Respond with transcription data and summarization (if successful)
-    res.json({
-      transcription: transcription,
-      summarization: summarization,
-    });
-    
-     // **Asynchronous Upload to S3**
+    // Asynchronously upload to S3
     (async () => {
       try {
         const fileStream = fs.createReadStream(filePath);
         const uploadParams = {
           Bucket: "audioandvideofilesbucket",
-          Key: `${req.file.originalname}`,
+          Key: req.file.originalname,
           Body: fileStream,
           ContentType: req.file.mimetype,
         };
-
         await s3.send(new PutObjectCommand(uploadParams));
-        // **Delete local file after uploading**
-        fs.unlinkSync(filePath);
+        fs.unlinkSync(filePath); // Delete file after successful upload
       } catch (uploadError) {
         console.error("Error uploading file to S3:", uploadError.message);
-        if(filePath){
-          fs.unlinkSync(filePath)
-        }
       }
     })();
-
   } catch (error) {
-    console.error("Error transcribing audio:", error.response?.data || error.message);
-    res.status(500).json({
-      error: error.response?.data || "Error processing the audio file",
-    });
+    res.status(500).json({ error: "Error processing the audio file" });
   }
 });
 
 
-
-app.post("/stream",async(req,res)=>{
-
-  const {text} = req.body;
-  if(!text) return res.status(400).json({error: "Text is required"});
-
-  try{
+app.post("/stream", isAuthenticated, async (req, res) => {
+  const { text } = req.body;
+  if (!text) return res.status(400).json({ error: "Text is required" });
+  try {
     res.setHeader("Content-Type", "audio/mpeg");
     res.setHeader("Transfer-Encoding", "chunked");
-
     const streamToRead = await streamClient.audio.speech.create({
       model: deploymentAudio,
       voice: "alloy",
-      input: req.body.text,
+      input: text,
       response_format: "mp3",
       stream: true,
     });
-    const stream = streamToRead.body;
-    if(!stream) {
-      throw new Error("No stream returned from OpenAI API");
-    }
-    stream.pipe(res);
-  }catch(error){
-    console.error("Error generating speech:",error);
-    res.status(500).json({error:"Failed to generate speech"});
+    streamToRead.body.pipe(res);
+  } catch (error) {
+    res.status(500).json({ error: "Failed to generate speech" });
   }
-
 });
 
-
-app.post('/chatbot',async(req,res)=>{
+app.post("/chatbot", isAuthenticated, async (req, res) => {
   if (!req.body.message) {
     return res.status(400).json({ error: "Message is required" });
   }
   try {
     const chatbotResult = await chatclient.chat.completions.create({
       messages: [
-        { role: "system", content: `You are a chatbot. You will answer to the questions based on the given content ${storedTranscription}.` },
+        { role: "system", content:  `You are a chatbot. You will answer questions based on the given content: ${transcription}.` },
         { role: "user", content: req.body.message },
       ],
       model: deployment,
     });
-    chatbotSolution = chatbotResult.choices[0].message.content;
-    res.status(200).json({output:chatbotSolution})
+    res.status(200).json({ output: chatbotResult.choices[0].message.content });
   } catch (error) {
-    console.log('Error chatbot :', error.message);
+    res.status(500).json({ error: "Failed to generate chatbot response" });
   }
-})
+});
 
-app.get('/',(req,res)=>{
+app.get("/", (req, res) => {
   res.status(200).send("Welcome to VideoSummary");
-})
+});
 
 app.listen(port, () => {
   console.log(`Server running on http://localhost:${port}`);

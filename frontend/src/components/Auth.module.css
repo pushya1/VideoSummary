@@ -1,0 +1,80 @@
+/* Profile Icon (Aligned Right) */
+.profileIcon {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 40px;
+    height: 40px;
+    border: 2px solid #81b644;  /* Proper border width */
+    border-radius: 50%;
+    overflow: hidden; /* Ensures image fits inside */
+  }
+  
+  .profileIcon img {
+    width: 100%;  /* Ensures it scales with the container */
+    height: 100%;
+    object-fit: cover;
+  }
+  
+  .profileDropdown {
+    position: absolute;
+    margin-top: 17px;
+    height: auto;
+    width: 200px;
+    top: 100%; 
+    right: 0; /* Align to the right of the icon */
+    background-color: white;
+    border: 1px solid #c7c7c7;
+    border-radius: 5px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
+    padding: 0px 10px 10px 10px;
+    z-index: 10; 
+    text-align: center;
+  }
+  
+  .email {
+    margin-bottom: 25px;
+    font-size: 0.8em;
+  }
+
+  .name{
+    margin-top: 0px;
+  }
+
+  .profileDropdown img{
+    height: 75px;
+    width: 75px;
+    border-radius: 50%;
+    border: 2px solid rgb(107, 196, 107);
+  }
+  
+  .profileDropdown button {
+    padding: 10px 35px;
+    background-color: #f0f0f0;
+    border: 1px solid #c7c7c7;
+    border-radius: 15px;
+    cursor: pointer;
+    font-size: 1em;
+  }
+  
+  .profileDropdown button:hover {
+    background-color: #7c7c7c;
+  }
+
+.signin {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 80px;
+  height: 40px;
+  padding: 5px;
+  border: none; /* Proper border width */
+  border-radius: 15px;
+  background-color: transparent; /* Initial background is transparent */
+  border: 1px solid #c7c7c7;
+  transition: background-color 0.7s ease-out; /* Add the transition property */
+}
+
+.signin:hover {
+  background-color: #c2e7ff; /* Target background color on hover */
+}

@@ -20,20 +20,3 @@
   height: 40px;  /* Adjust height for better consistency */
 }
 
-/* Profile Icon (Aligned Right) */
-.profileIcon {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  width: 40px;
-  height: 40px;
-  border: 2px solid #81b644;  /* Proper border width */
-  border-radius: 50%;
-  overflow: hidden; /* Ensures image fits inside */
-}
-
-.profileIcon img {
-  width: 100%;  /* Ensures it scales with the container */
-  height: 100%;
-  object-fit: cover;
-}

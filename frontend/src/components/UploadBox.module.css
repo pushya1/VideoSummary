@@ -84,6 +84,13 @@
   font-size: 16px;
 }
 
+.errorMessage {
+  color: red;
+  font-size: 14px;
+  margin-top: 8px;
+  text-align: center;
+}
+
 /* Active Button */
 .active {
   background-color: #c2c0c0;

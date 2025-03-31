@@ -10,7 +10,7 @@ import DocumentModal from "./DocumentModal";
 const TranscriptionSummary = ({ title, date, tag, transcription, summary, image }) => {
   const [audioSrc,setAudioSrc] = useState(null);
   const [isLoading,setIsLoading] = useState(false);
-  const [isPlaying,setIsPlaying] = useState(false);
+  const [isPlaying,setIsPlaying] = useState(false);         
   const [isOpen,setIsOpen] = useState(false);
   const audioRef = useRef(null);
 
@@ -27,6 +27,7 @@ const TranscriptionSummary = ({ title, date, tag, transcription, summary, image 
         method: "POST",
         headers: {"Content-Type":"application/json"},
         body: JSON.stringify({text:summary}),
+        credentials: 'include'
       })
       if(!response.ok) throw new Error("Failed to fetch audio");
       const audioUrl = URL.createObjectURL(await response.blob());
