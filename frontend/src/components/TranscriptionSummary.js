@@ -1,54 +1,71 @@
-import React, { useState,useRef } from "react";
-import styles from "./TranscriptionSummary.module.css"; // Import CSS Module
-import OpenInFullRoundedIcon from '@mui/icons-material/OpenInFullRounded';
-import thubnail from '../assets/meeting.jpeg';
-import Voice from '../assets/svg/Voice';
+import React, { useState, useRef } from "react";
+import styles from "./TranscriptionSummary.module.css";
+import OpenInFullRoundedIcon from "@mui/icons-material/OpenInFullRounded";
+import thumbnail from "../assets/meeting.jpeg";
+import Voice from "../assets/svg/Voice";
 import Spinner from "../assets/svg/Spinner";
 import Stop from "../assets/svg/Stop";
 import DocumentModal from "./DocumentModal";
 
 const TranscriptionSummary = ({ title, date, tag, transcription, summary, image }) => {
-  const [audioSrc,setAudioSrc] = useState(null);
-  const [isLoading,setIsLoading] = useState(false);
-  const [isPlaying,setIsPlaying] = useState(false);         
-  const [isOpen,setIsOpen] = useState(false);
+  const [audioSrc, setAudioSrc] = useState(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [isOpen, setIsOpen] = useState(false);
   const audioRef = useRef(null);
 
-  async function handlePlay(){
+  async function handlePlay() {
     if (isPlaying && audioRef.current) {
       audioRef.current.pause();
-      audioRef.current.currentTime = 0; 
+      audioRef.current.currentTime = 0;
       setIsPlaying(false);
       return;
     }
-    try{
+
+    const token = localStorage.getItem("token");
+    if (!token) {
+      console.error("Please sign in to use text-to-speech.");
+      return;
+    }
+
+    try {
       setIsLoading(true);
-      const response = await fetch(`${process.env.REACT_APP_VOICE_URL}`,{
+      const response = await fetch("http://localhost:5000/stream", {
         method: "POST",
-        headers: {"Content-Type":"application/json"},
-        body: JSON.stringify({text:summary}),
-        credentials: 'include'
-      })
-      if(!response.ok) throw new Error("Failed to fetch audio");
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ text: summary }),
+      });
+
+      if (response.status === 401) {
+        console.error("Session expired. Please sign in again.");
+        setIsLoading(false);
+        return;
+      }
+
+      if (!response.ok) throw new Error("Failed to fetch audio");
+
       const audioUrl = URL.createObjectURL(await response.blob());
       setAudioSrc(audioUrl);
       setIsLoading(false);
       setIsPlaying(true);
-    }catch(error){
-      console.error("Error playing audio:",error);
+    } catch (error) {
+      console.error("Error playing audio:", error);
       setIsLoading(false);
     }
-    
   }
 
-  function handleAudioEnd(){
+  function handleAudioEnd() {
     setIsPlaying(false);
   }
+
   return (
     <div className={styles.container}>
       <div className={styles.header}>
         <div className={styles.thumbnailBorder}>
-            {image && <img src={thubnail} alt="Meeting" className={styles.meetingImage} />}
+          {image && <img src={thumbnail} alt="Meeting" className={styles.meetingImage} />}
         </div>
         <div>
           <h2 className={styles.title}>{title}</h2>
@@ -64,14 +81,13 @@ const TranscriptionSummary = ({ title, date, tag, transcription, summary, image 
       <div className={styles.transcriptionBox}>
         <h3 className={styles.sectionTitle}>Transcription</h3>
         <p className={styles.text}>{transcription}</p>
-        <button className={styles.expandButton} onClick={()=>setIsOpen(true)}>
+        <button className={styles.expandButton} onClick={() => setIsOpen(true)}>
           <OpenInFullRoundedIcon size={18} />
         </button>
-        <DocumentModal isOpen={isOpen} onClose={()=>setIsOpen(false)}>
+        <DocumentModal isOpen={isOpen} onClose={() => setIsOpen(false)}>
           <h2>Transcription</h2>
           <p>{transcription}</p>
         </DocumentModal>
-
       </div>
 
       {/* Summary Section */}
@@ -80,7 +96,7 @@ const TranscriptionSummary = ({ title, date, tag, transcription, summary, image 
         <p className={styles.text}>{summary}</p>
         {audioSrc && <audio autoPlay ref={audioRef} src={audioSrc} onEnded={handleAudioEnd} />}
         <button className={styles.expandButton} onClick={handlePlay}>
-          {isLoading ? <Spinner/> : isPlaying ? <Stop/> : <Voice/>}
+          {isLoading ? <Spinner /> : isPlaying ? <Stop /> : <Voice />}
         </button>
       </div>
     </div>

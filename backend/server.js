@@ -1,4 +1,4 @@
-const {AzureOpenAI} = require("openai");
+const { AzureOpenAI } = require("openai");
 const express = require("express");
 const multer = require("multer");
 const fs = require("fs");
@@ -8,10 +8,12 @@ const cors = require("cors");
 const path = require("path");
 const { S3Client, PutObjectCommand } = require("@aws-sdk/client-s3");
 const passport = require("passport");
-const session = require("express-session");
+const jwt = require("jsonwebtoken");
 const GoogleStrategy = require("passport-google-oauth20").Strategy;
 
 dotenv.config();
+
+const JWT_SECRET = process.env.JWT_SECRET;
 
 const endpointWhisper = process.env.endpointWhisper;
 const apiKeyWhisper = process.env.apiKeyWhisper;
@@ -39,7 +41,7 @@ const streamClient = new AzureOpenAI({
   endpoint: endpointAudio, 
   apiKey: apiKeyAudio, 
   apiVersion: apiVersionAudio, 
-  deployment: 'tts-hd' 
+  deployment: deploymentAudio 
 });
   
 const chatclient = new AzureOpenAI({ endpoint, apiKey, apiVersion, deployment });
@@ -61,16 +63,8 @@ app.use(
     credentials: true, // Allow credentials (cookies, authorization headers)
   })
 );
-
 app.use(express.json());
-app.use(session({
-  secret: process.env.SESSION_SECRET,
-  resave: false,
-  saveUninitialized: true,
-}));
-
 app.use(passport.initialize());
-app.use(passport.session());
 
 passport.use(new GoogleStrategy({
   clientID: process.env.GOOGLE_CLIENT_ID,
@@ -80,39 +74,42 @@ passport.use(new GoogleStrategy({
   return done(null, profile);
 }));
 
-passport.serializeUser((user, done) => {
-  done(null, user);
-});
+const generateToken = (user) => {
+  return jwt.sign(
+    {
+      id: user.id,
+      displayName: user.displayName,
+      email: user.emails[0].value,
+      photo: user.photos[0].value,
+    },
+    JWT_SECRET,
+    { expiresIn: "1h" }
+  );
+};
 
-passport.deserializeUser((user, done) => {
-  done(null, user);
-});
-
-const isAuthenticated = (req, res, next) => {
-  if (req.isAuthenticated()) {
-    return next();
-  }
-  res.status(401).json({ message: "Unauthorized" });
+const authenticateJWT = (req, res, next) => {
+  const token = req.headers.authorization?.split(" ")[1];
+  if (!token) return res.status(401).json({ message: "Unauthorized" });
+  
+  jwt.verify(token, JWT_SECRET, (err, user) => {
+    if (err) return res.status(403).json({ message: "Forbidden" });
+    req.user = user;
+    next();
+  });
 };
 
 app.get("/auth/google", passport.authenticate("google", { scope: ["profile", "email"] }));
 
 app.get("/auth/google/callback", 
-  passport.authenticate("google", { failureRedirect: "/" }),
+  passport.authenticate("google", { session: false, failureRedirect: "/" }),
   (req, res) => {
-    res.redirect("http://localhost:3000/");
+    const token = generateToken(req.user);
+    res.redirect(`http://localhost:3000/?token=${token}`);
   }
 );
 
-app.get("/logout", (req, res) => {
-  req.logout((err) => {
-    if (err) return next(err);
-    res.redirect("/");
-  });
-});
-
-app.get("/user", isAuthenticated, (req, res) => {
-  res.json(req.user);
+app.get("/user", authenticateJWT, (req, res) => {
+  res.json({ user: req.user });
 });
 
 const storage = multer.diskStorage({
@@ -127,64 +124,44 @@ const storage = multer.diskStorage({
 });
 
 const upload = multer({ storage });
-
 let transcription;
 
-app.post("/transcribe", isAuthenticated, upload.single("audio"), async (req, res) => {
+app.post("/transcribe", authenticateJWT, upload.single("audio"), async (req, res) => {
+  let summary;
   const filePath = req.file.path;
   if (!fs.existsSync(filePath)) {
     return res.status(400).send("File not found on server.");
   }
 
   try {
-    // Transcribe audio
     const transcriptionResult = await transcribeClient.audio.transcriptions.create({
       model: deploymentWisper,
       file: fs.createReadStream(filePath),
     });
 
-    let summaryText = "Summarization failed.";
+    transcription = transcriptionResult.text;
+
     try {
       const chatClient = new AzureOpenAI({ endpoint, apiKey, apiVersion, deployment });
-      const summaryResult = await chatClient.chat.completions.create({
+      const result = await chatClient.chat.completions.create({
         messages: [
-          { role: "system", content: "You are a summarizer. Summarize the given text concisely." },
-          { role: "user", content: transcriptionResult.text },
+          { role: "system", content: "You are a summarizer. You will summarize the given text in a concise way" },
+          { role: "user", content: transcription },
         ],
         model: deployment,
       });
 
-      summaryText = summaryResult.choices[0].message.content;
+      summary = result.choices[0].message.content;
     } catch (summarizationError) {
-      console.error("Error summarizing text:", summarizationError.message);
+      console.log('Error summarizing text:', summarizationError.message);
     }
-    transcription = transcriptionResult.text;
-    // Send response before S3 upload
-    res.json({ transcription: transcription, summarization: summaryText });
-
-    // Asynchronously upload to S3
-    (async () => {
-      try {
-        const fileStream = fs.createReadStream(filePath);
-        const uploadParams = {
-          Bucket: "audioandvideofilesbucket",
-          Key: req.file.originalname,
-          Body: fileStream,
-          ContentType: req.file.mimetype,
-        };
-        await s3.send(new PutObjectCommand(uploadParams));
-        fs.unlinkSync(filePath); // Delete file after successful upload
-      } catch (uploadError) {
-        console.error("Error uploading file to S3:", uploadError.message);
-      }
-    })();
+    res.json({ transcription, summary });
   } catch (error) {
     res.status(500).json({ error: "Error processing the audio file" });
   }
 });
 
-
-app.post("/stream", isAuthenticated, async (req, res) => {
+app.post("/stream", authenticateJWT, async (req, res) => {
   const { text } = req.body;
   if (!text) return res.status(400).json({ error: "Text is required" });
   try {
@@ -203,14 +180,14 @@ app.post("/stream", isAuthenticated, async (req, res) => {
   }
 });
 
-app.post("/chatbot", isAuthenticated, async (req, res) => {
+app.post("/chatbot", authenticateJWT, async (req, res) => {
   if (!req.body.message) {
     return res.status(400).json({ error: "Message is required" });
   }
   try {
     const chatbotResult = await chatclient.chat.completions.create({
       messages: [
-        { role: "system", content:  `You are a chatbot. You will answer questions based on the given content: ${transcription}.` },
+        { role: "system", content: `You are a chatbot. You will answer questions based on the given content: ${transcription}.` },
         { role: "user", content: req.body.message },
       ],
       model: deployment,
@@ -219,10 +196,6 @@ app.post("/chatbot", isAuthenticated, async (req, res) => {
   } catch (error) {
     res.status(500).json({ error: "Failed to generate chatbot response" });
   }
-});
-
-app.get("/", (req, res) => {
-  res.status(200).send("Welcome to VideoSummary");
 });
 
 app.listen(port, () => {

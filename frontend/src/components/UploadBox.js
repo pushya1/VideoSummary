@@ -1,5 +1,5 @@
 import styles from "./UploadBox.module.css";
-import React, { useState,useRef } from "react";
+import React, { useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import animation from "../assets/animation.gif";
 import draganddrop from "../assets/draganddrop.svg";
@@ -8,13 +8,11 @@ import Progress from "./Progress.js";
 
 export default function UploadBox() {
   const [isLoading, setIsLoading] = useState(false);
-  const audioRef = useRef(null);
-  const navigate = useNavigate();
-
-  const [errorMessage,setErrorMessage] = useState("");
+  const [errorMessage, setErrorMessage] = useState("");
   const [file, setFile] = useState(null);
+  const navigate = useNavigate();
+  const audioRef = useRef(null);
 
-  // Handle file selection from input
   const handleFileChange = (event) => {
     const selectedFile = event.target.files[0];
     if (selectedFile) {
@@ -22,7 +20,6 @@ export default function UploadBox() {
     }
   };
 
-  // Handle Drag & Drop
   const handleDrop = (event) => {
     event.preventDefault();
     const droppedFile = event.dataTransfer.files[0];
@@ -40,40 +37,48 @@ export default function UploadBox() {
     setIsLoading(true);
 
     const formData = new FormData();
-    formData.append('audio', file);
+    formData.append("audio", file);
+
+    const token = localStorage.getItem("token");
+    if (!token) {
+      setErrorMessage("Please sign in to upload");
+      setIsLoading(false);
+      return;
+    }
 
     try {
-      const response = await fetch(`${process.env.REACT_APP_UPLOAD_URL}`, {
-        method: 'POST',
+      const response = await fetch("http://localhost:5000/transcribe", {
+        method: "POST",
         body: formData,
-        credentials: 'include'
+        headers: { Authorization: `Bearer ${token}` },
       });
 
-      if(response.status===401){
-        setErrorMessage("Please Sign in to Upload")
+      if (response.status === 401) {
+        setErrorMessage("Unauthorized. Please sign in again.");
+        localStorage.removeItem("token");
+        return;
       }
 
       if (!response.ok) {
-        throw new Error('Failed to upload file');
+        throw new Error("Failed to upload file");
       }
 
       const data = await response.json();
-      navigate("/content", { state: { transcription: data.transcription, summary: data.summarization } });
+      navigate("/content", { state: { transcription: data.transcription, summary: data.summary } });
       if (audioRef.current) {
         audioRef.current.load();
       }
     } catch (error) {
-      console.error('Error uploading file:', error);
+      console.error("Error uploading file:", error);
+      setErrorMessage("Upload failed. Please try again.");
     } finally {
       setIsLoading(false);
     }
-
   };
 
   return (
     <>
       <div className={styles.uploadContainer}>
-
         <div className={styles.select}>
           <input
             type="file"
@@ -88,15 +93,27 @@ export default function UploadBox() {
             onDrop={handleDrop}
             onDragOver={handleDragOver}
           >
-          {isLoading ? <img src={animation} alt="Robo animation"/> : <img src={draganddrop} alt="DragandDrop"/>}
+            {isLoading ? (
+              <img src={animation} alt="Uploading..." />
+            ) : (
+              <img src={draganddrop} alt="Drag and Drop" />
+            )}
           </label>
-          
         </div>
 
         <div className={styles.upload}>
-          {isLoading ? (<Progress/>) : (<button className={`${styles.button} ${file && styles.active}`} onClick={handleFileUpload}><img src={uploadIcon} alt="uploadicon"/><h4>Upload</h4></button>) }
+          {isLoading ? (
+            <Progress />
+          ) : (
+            <button
+              className={`${styles.button} ${file && styles.active}`}
+              onClick={handleFileUpload}
+            >
+              <img src={uploadIcon} alt="Upload" />
+              <h4>Upload</h4>
+            </button>
+          )}
         </div>
-
       </div>
 
       {file && <p className={styles.fileName}>Selected: {file.name}</p>}
