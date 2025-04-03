@@ -1,4 +1,4 @@
-import React, { useState,useEffect } from "react";
+import React from "react";
 import styles from "./Main.module.css"; 
 import Sparkle from "../assets/sparkle.svg";
 import UploadBox from "../components/UploadBox.js"
