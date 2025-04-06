@@ -22,7 +22,7 @@ const Auth = () => {
     const token = localStorage.getItem("token");
     if (!token) return;
     try {
-      const res = await fetch("http://localhost:5000/user", {
+      const res = await fetch(`${process.env.REACT_APP_USER_URL}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       const data = await res.json();
@@ -34,7 +34,7 @@ const Auth = () => {
   };
 
   const handleLogin = () => {
-    window.location.href = "http://localhost:5000/auth/google";
+    window.location.href = `${process.env.REACT_APP_AUTH_URL}`;
   };
 
   const handleLogout = () => {

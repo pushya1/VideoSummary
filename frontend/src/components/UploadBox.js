@@ -47,7 +47,7 @@ export default function UploadBox() {
     }
 
     try {
-      const response = await fetch("http://localhost:5000/transcribe", {
+      const response = await fetch(`${process.env.REACT_APP_UPLOAD_URL}`, {
         method: "POST",
         body: formData,
         headers: { Authorization: `Bearer ${token}` },

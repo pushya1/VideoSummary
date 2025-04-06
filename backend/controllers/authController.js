@@ -1,7 +1,6 @@
 const User = require("../models/User");
 const generateToken = require("../utils/generateToken");
 const googleCallback = async (req, res) => {
-  console.log("del",req.user);
   try {
     let user = await User.findOne({ googleId: req.user.id });
 
