@@ -53,7 +53,6 @@ const chatbotResponse = async (req, res) => {
     const googleId = decodedToken.googleId;
 
     const transcriptionResult = await getLatestFileTranscription(googleId);
-    console.log(transcriptionResult)
 
   try {
     const chatbotResult = await chatClient.chat.completions.create({

@@ -9,7 +9,7 @@ require("dotenv").config();
 const app = express();
 const port = 5000;
 
-app.use(cors({ origin: "http://localhost:3000", credentials: true }));
+app.use(cors({ origin: `${process.env.FRONTEND_URL}`, credentials: true }));
 app.use(express.json());
 
 const connectDB = require("./config/db");

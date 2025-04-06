@@ -66,7 +66,6 @@ const transcribeAudio = async (req, res) => {
         const response = await s3.send(file) 
         fs.unlinkSync(filePath); // Delete file after successful upload
         if(response.$metadata.httpStatusCode === 200){
-          console.log("sucessfully uploaded.");
           const newFile = new File({
             userId: googleId,
             fileName: req.file.originalname,
@@ -76,9 +75,7 @@ const transcribeAudio = async (req, res) => {
             summary: summary,
           });
           const mongoResponse = await newFile.save();
-          console.log("mongoresponse: ",mongoResponse);
-          console.log("mongoId: ",mongoResponse._id);
-          console.log("File details saved to MongoDB.");
+          console.log("File Uploaded. details saved to MongoDB.");
           newDoc = [{
             fileId: mongoResponse._id,
             fileName: mongoResponse.fileName,
@@ -94,11 +91,10 @@ const transcribeAudio = async (req, res) => {
           );
       
           if (!updatedUser) {
-            console.log('User not found.');
+            console.error('User not found.');
             return;
           }
       
-          console.log('Updated User:', updatedUser);
         } catch (err) {
           console.error('Error updating user:', err);
         }
