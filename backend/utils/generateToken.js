@@ -4,10 +4,10 @@ require("dotenv").config();
 const generateToken = (user) => {
   return jwt.sign(
     {
-      id: user.id,
+      googleId: user.googleId,
       displayName: user.displayName,
-      email: user.emails[0].value,
-      photo: user.photos[0].value,
+      email: user.email,
+      photo: user.photo,
     },
     process.env.JWT_SECRET,
     { expiresIn: "1h" }

@@ -12,6 +12,10 @@ const port = 5000;
 app.use(cors({ origin: "http://localhost:3000", credentials: true }));
 app.use(express.json());
 
+const connectDB = require("./config/db");
+connectDB();
+
+
 app.use(authRoutes);
 app.use(transcribeRoutes);
 app.use(streamRoutes);
