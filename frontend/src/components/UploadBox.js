@@ -64,7 +64,7 @@ export default function UploadBox() {
       }
 
       const data = await response.json();
-      navigate("/content", { state: { transcription: data.transcription, summary: data.summary } });
+      navigate("/content", { state: { transcription: data.transcription, summary: data.summary, date: data.currentDateString, name: data.name, videoKey: data.videoKey } });
       if (audioRef.current) {
         audioRef.current.load();
       }

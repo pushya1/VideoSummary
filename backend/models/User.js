@@ -10,7 +10,7 @@ const userSchema = new mongoose.Schema(
       {
         fileId: {
           type: mongoose.Schema.Types.ObjectId,
-          ref: "files",
+          ref: "File",
           required: true,
         },
         fileName: {

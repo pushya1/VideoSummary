@@ -16,13 +16,20 @@
   height: 90px;
   border-radius: 8px;
   object-fit: cover;
+  cursor: pointer;
 }
+
 
 .thumbnailBorder {
   padding: 3px;
   border-radius: 8px;
   border: 1px solid #c7c7c7;
 }
+
+.thumbnailBorder:hover{
+  border: 2px solid rgb(7, 129, 129);
+}
+
 
 .title {
   font-size: 20px;

@@ -7,7 +7,7 @@ import Spinner from "../assets/svg/Spinner";
 import Stop from "../assets/svg/Stop";
 import DocumentModal from "./DocumentModal";
 
-const TranscriptionSummary = ({ title, date, tag, transcription, summary, image }) => {
+const TranscriptionSummary = ({ title, date, tag, transcription, summary, image,videoKey }) => {
   const [audioSrc, setAudioSrc] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const [isPlaying, setIsPlaying] = useState(false);
@@ -61,11 +61,15 @@ const TranscriptionSummary = ({ title, date, tag, transcription, summary, image 
     setIsPlaying(false);
   }
 
+  function clickHandler(){
+    window.open(`${process.env.REACT_APP_BUCKET_URL}/${videoKey}`, '_blank');
+  }
+
   return (
     <div className={styles.container}>
       <div className={styles.header}>
         <div className={styles.thumbnailBorder}>
-          {image && <img src={thumbnail} alt="Meeting" className={styles.meetingImage} />}
+          {image && <img src={thumbnail} alt="File" className={styles.meetingImage} onClick={clickHandler} />}
         </div>
         <div>
           <h2 className={styles.title}>{title}</h2>

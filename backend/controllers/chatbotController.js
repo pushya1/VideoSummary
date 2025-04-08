@@ -3,38 +3,33 @@ const jwt = require('jsonwebtoken');
 const User = require("../models/User");
 const File = require("../models/File");
 
-async function getLatestFileTranscription(googleId) {
+const getLatestFileTranscription = async (googleId) => {
   try {
-    // Step 1: Find the user and get their latest file
-    const user = await User.findOne({ googleId })
-      .sort({ 'files.createdAt': -1 }) // Sort files by creation date in descending order
-      .select('files')
-      .lean();
-    
-    if (!user || !user.files || user.files.length === 0) {
-      throw new Error('User or files not found');
+    const user = await User.findOne({ googleId }).select('files').lean();
+
+    if (!user || !user.files.length) {
+      throw new Error("User or their files not found.");
     }
-    
-    // Get the latest file (first element after sorting)
-    const latestFile = user.files[0];
-    const fileId = latestFile.fileId;
-    
-    // Step 2: Query the File model to get the transcription
-    const fileDoc = await File.findById(fileId)
-      .select('transcription')
+
+    const fileIds = user.files.map(f => f.fileId);
+
+    const latestFile = await File.findOne({ _id: { $in: fileIds } })
+      .sort({ createdAt: -1 }) // ✅ Get the most recently created file
+      .select('transcription') // Or add more: 'fileName key summary'
       .lean();
-    
-    if (!fileDoc) {
-      throw new Error('File document not found');
+
+    if (!latestFile) {
+      throw new Error("No file document found.");
     }
-    
-    return fileDoc.transcription;
-    
+
+    return latestFile.transcription;
+
   } catch (error) {
-    console.error('Error fetching latest file transcription:', error);
+    console.error("Error fetching latest file transcription:", error.message);
     throw error;
   }
-}
+};
+
 
 const chatbotResponse = async (req, res) => {
   if (!req.body.message) return res.status(400).json({ error: "Message is required" });

@@ -8,6 +8,7 @@ const fileSchema = new mongoose.Schema(
     key: { type: String, required: true },
     transcription: { type: String, required: true },
     summary: { type: String, required: true },
+    date: { type: String, required: true}
   },
   { timestamps: true }
 );

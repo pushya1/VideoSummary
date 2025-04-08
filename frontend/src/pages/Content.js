@@ -6,20 +6,21 @@ import ChatComponent from '../components/ChatComponent'
 import styles from './Content.module.css'
 const Content = () => {
   const location = useLocation();
-  const { transcription, summary } = location.state || {};
+  const { transcription, summary, date, name, videoKey } = location.state || {};
 
-  return (
+  return (      
     <>
         <Header/>
         <div className={styles.container}>
             <div className={styles.transcriptionSummary}>
                 <TranscriptionSummary 
-                    title="Team Meeting"
-                    date="3/5/2025, 10:00 AM"
+                    title={name}
+                    date={date}
                     tag="Work"
                     transcription={transcription}
                     summary={summary}
                     image="https://example.com/meeting.jpg"
+                    videoKey={videoKey}
                 />
             </div>
             <div className={styles.chatComponent}>

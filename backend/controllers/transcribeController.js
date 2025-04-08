@@ -6,7 +6,7 @@ const jwt = require('jsonwebtoken');
 const File = require("../models/File");
 const User = require("../models/User");
 const { v4: uuidv4 } = require('uuid');
-
+const getReadableDate = require("../utils/getReadableDate");
 require("dotenv").config();
 
 function generateUUID() {
@@ -49,7 +49,10 @@ const transcribeAudio = async (req, res) => {
     });
 
     const summary = result.choices[0].message.content;
-    res.json({ transcription, summary});
+    
+    const currentDateString = getReadableDate();
+
+    res.json({ transcription, summary, currentDateString:currentDateString, name:req.file.originalname, videoKey:newUUID});
 
     let newDoc = "";
     // Asynchronously upload to S3
@@ -73,6 +76,7 @@ const transcribeAudio = async (req, res) => {
             key: newUUID,
             transcription: transcription,
             summary: summary,
+            date: currentDateString,
           });
           const mongoResponse = await newFile.save();
           console.log("File Uploaded. details saved to MongoDB.");
